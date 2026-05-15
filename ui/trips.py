@@ -76,7 +76,13 @@ def trips_page(open_new: bool = False):
 
         table.add_slot('body-cell-status', '''
             <q-td :props="props">
-                <span :style="_statusStyle(props.row.status)">{{ props.row.status }}</span>
+                <span :style="props.row.status === 'Paid'
+                    ? 'background-color:#e8f5e9;color:#2e7d32;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;'
+                    : props.row.status === 'Partial'
+                    ? 'background-color:#fff3e0;color:#f57c00;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;'
+                    : 'background-color:#ffebee;color:#e53935;border-radius:12px;padding:2px 10px;font-size:11px;font-weight:600;'">
+                    {{ props.row.status }}
+                </span>
             </q-td>
         ''')
         table.add_slot('body-cell-actions', '''
