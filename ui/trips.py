@@ -1,3 +1,4 @@
+import re
 from nicegui import ui
 import database
 from helpers import calc_pending, calc_received, calc_status
@@ -128,32 +129,34 @@ def _open_modal(trip_id, on_save):
 
     with ui.dialog() as dialog, ui.card().style('width: 700px; max-width: 95vw; padding: 24px;'):
         with ui.row().style('justify-content: space-between; align-items: center; margin-bottom: 16px; width: 100%;'):
-            ui.label(f'{"✏️" if trip else "➕"} {title}').style('font-size: 16px; font-weight: 700; color: #1e3a5f;')
-            ui.button('✕', on_click=dialog.close).props('flat round dense')
+            with ui.row().style('align-items: center; gap: 8px;'):
+                ui.icon('edit' if trip else 'add_circle').style('color: #1e3a5f; font-size: 22px;')
+                ui.label(title).style('font-size: 16px; font-weight: 700; color: #1e3a5f;')
+            ui.button(icon='close', on_click=dialog.close).props('flat round dense')
 
         # ── Trip Details ───────────────────────────────────────────────
         _section_label('Trip Details')
         with ui.row().style('gap: 12px; flex-wrap: wrap;'):
-            f_date    = _field('Date *',             trip, 'date',            'date')
-            f_vehicle = _field('Vehicle Number *',   trip, 'vehicle_number',  'text')
-            f_state   = _field('State',              trip, 'state',           'text')
-            f_city    = _field('City',               trip, 'city',            'text')
-            f_loading = _field('Loading Address *',  trip, 'loading_address', 'text')
-            f_unload  = _field('Unloading Address *',trip, 'unloading_address','text')
+            f_date    = _field('Date *',             trip, 'date',             'date',   '')
+            f_vehicle = _field('Vehicle Number *',   trip, 'vehicle_number',   'text',   'e.g. GJ 12 AB 1234')
+            f_state   = _field('State',              trip, 'state',            'text',   'e.g. Gujarat')
+            f_city    = _field('City',               trip, 'city',             'text',   'e.g. Surat')
+            f_loading = _field('Loading Address *',  trip, 'loading_address',  'text',   'Pickup location')
+            f_unload  = _field('Unloading Address *',trip, 'unloading_address','text',   'Delivery location')
 
         # ── Contact Details ────────────────────────────────────────────
         _section_label('Contact Details')
         with ui.row().style('gap: 12px; flex-wrap: wrap;'):
-            f_driver = _field('Driver Phone', trip, 'driver_phone', 'text')
-            f_owner  = _field('Owner Phone',  trip, 'owner_phone',  'text')
+            f_driver = _field('Driver Phone', trip, 'driver_phone', 'text', '10 digits only')
+            f_owner  = _field('Owner Phone',  trip, 'owner_phone',  'text', '10 digits only')
 
         # ── Payment Details ────────────────────────────────────────────
         _section_label('Payment Details')
         with ui.row().style('gap: 12px; flex-wrap: wrap;'):
-            f_total = _field('Total Booking ₹ *', trip, 'total_booking', 'number')
-            f_p1    = _field('Payment 1 ₹',       trip, 'payment_1',     'number')
-            f_p2    = _field('Payment 2 ₹',       trip, 'payment_2',     'number')
-            f_p3    = _field('Payment 3 ₹',       trip, 'payment_3',     'number')
+            f_total = _field('Total Booking ₹ *', trip, 'total_booking', 'number', 'Full booking amount')
+            f_p1    = _field('Payment 1 ₹',       trip, 'payment_1',     'number', 'First instalment')
+            f_p2    = _field('Payment 2 ₹',       trip, 'payment_2',     'number', 'Second instalment')
+            f_p3    = _field('Payment 3 ₹',       trip, 'payment_3',     'number', 'Third instalment')
 
         # Pending display
         pending_label = ui.label('').style(
@@ -181,39 +184,40 @@ def _open_modal(trip_id, on_save):
             ui.button('Cancel', on_click=dialog.close).props('flat')
 
             def _save():
-                required = [f_date.value, f_vehicle.value, f_loading.value, f_unload.value, f_total.value]
-                if not all(required):
-                    ui.notify('Please fill in all required fields (*)', type='negative')
+                errors = _validate(
+                    f_date.value, f_vehicle.value, f_state.value, f_city.value,
+                    f_driver.value, f_owner.value, f_loading.value, f_unload.value,
+                    f_total.value, f_p1.value, f_p2.value, f_p3.value,
+                )
+                if errors:
+                    ui.notify(errors[0], type='negative')
                     return
-                try:
-                    kwargs = dict(
-                        date=f_date.value,
-                        vehicle_number=f_vehicle.value,
-                        state=f_state.value or '',
-                        city=f_city.value or '',
-                        driver_phone=f_driver.value or '',
-                        owner_phone=f_owner.value or '',
-                        loading_address=f_loading.value,
-                        unloading_address=f_unload.value,
-                        total_booking=float(f_total.value),
-                        payment_1=float(f_p1.value or 0),
-                        payment_2=float(f_p2.value or 0),
-                        payment_3=float(f_p3.value or 0),
-                    )
-                    if trip:
-                        database.update_trip(trip['id'], **kwargs)
-                        ui.notify('Trip updated', type='positive')
-                    else:
-                        database.add_trip(**kwargs)
-                        ui.notify('Trip saved', type='positive')
-                    dialog.close()
-                    on_save()
-                except ValueError:
-                    ui.notify('Invalid number in payment fields', type='negative')
+                kwargs = dict(
+                    date=f_date.value,
+                    vehicle_number=f_vehicle.value.strip().upper(),
+                    state=f_state.value.strip() if f_state.value else '',
+                    city=f_city.value.strip() if f_city.value else '',
+                    driver_phone=f_driver.value.strip() if f_driver.value else '',
+                    owner_phone=f_owner.value.strip() if f_owner.value else '',
+                    loading_address=f_loading.value.strip(),
+                    unloading_address=f_unload.value.strip(),
+                    total_booking=float(f_total.value),
+                    payment_1=float(f_p1.value or 0),
+                    payment_2=float(f_p2.value or 0),
+                    payment_3=float(f_p3.value or 0),
+                )
+                if trip:
+                    database.update_trip(trip['id'], **kwargs)
+                    ui.notify('Trip updated successfully', type='positive')
+                else:
+                    database.add_trip(**kwargs)
+                    ui.notify('Trip saved successfully', type='positive')
+                dialog.close()
+                on_save()
 
-            ui.button('💾 Save Trip', on_click=_save).style(
+            ui.button('Save Trip', on_click=_save).style(
                 'background-color: #1e3a5f; color: #fff; border-radius: 6px;'
-            )
+            ).props('icon=save')
 
     dialog.open()
 
@@ -225,12 +229,69 @@ def _section_label(text: str):
     )
 
 
-def _field(label: str, trip, field: str, input_type: str):
+def _field(label: str, trip, field: str, input_type: str, hint: str = ''):
     value = str(trip[field]) if trip and trip.get(field) is not None else ''
     inp = ui.input(label=label, value=value).style('min-width: 180px; flex: 1;')
     if input_type == 'date':
         inp.props('type=date')
+    if hint:
+        inp.props(f'hint="{hint}"')
     return inp
+
+
+def _validate(date_val, vehicle_val, state_val, city_val,
+              driver_val, owner_val, loading_val, unload_val,
+              total_val, p1_val, p2_val, p3_val) -> list[str]:
+    errors = []
+
+    # Required fields
+    if not date_val:
+        errors.append('Date is required')
+    if not vehicle_val or not vehicle_val.strip():
+        errors.append('Vehicle Number is required')
+    if not loading_val or not loading_val.strip():
+        errors.append('Loading Address is required')
+    if not unload_val or not unload_val.strip():
+        errors.append('Unloading Address is required')
+    if not total_val:
+        errors.append('Total Booking amount is required')
+
+    if errors:
+        return errors
+
+    # Phone validation — 10 digits if provided
+    if driver_val and driver_val.strip():
+        if not re.match(r'^\d{10}$', driver_val.strip()):
+            errors.append('Driver phone must be exactly 10 digits (e.g. 9876543210)')
+    if owner_val and owner_val.strip():
+        if not re.match(r'^\d{10}$', owner_val.strip()):
+            errors.append('Owner phone must be exactly 10 digits (e.g. 9876543210)')
+
+    # Amount validation
+    try:
+        total = float(total_val)
+        if total <= 0:
+            errors.append('Total Booking amount must be greater than 0')
+    except (ValueError, TypeError):
+        errors.append('Total Booking must be a valid number')
+        return errors
+
+    try:
+        p1 = float(p1_val or 0)
+        p2 = float(p2_val or 0)
+        p3 = float(p3_val or 0)
+    except (ValueError, TypeError):
+        errors.append('Payment amounts must be valid numbers')
+        return errors
+
+    if p1 < 0 or p2 < 0 or p3 < 0:
+        errors.append('Payment amounts cannot be negative')
+    elif p1 + p2 + p3 > total:
+        errors.append(
+            f'Total payments (₹{p1+p2+p3:,.0f}) cannot exceed Total Booking (₹{total:,.0f})'
+        )
+
+    return errors
 
 
 def _confirm_delete(trip_id: int, on_done):
