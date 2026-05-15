@@ -42,7 +42,7 @@ def _summary(all_rows):
 def trips_page(open_new: bool = False):
     sidebar('trips')
 
-    with ui.element('div').style(f'background-color: {PAGE_BG}; min-height: 100vh; padding: 24px; box-sizing: border-box;'):
+    with ui.column().style('width: 100%; padding: 24px; box-sizing: border-box; flex: 1; gap: 0;'):
         all_trips = [_build_row(t) for t in database.get_all_trips()]
         count, total_booking, total_pending, this_month = _summary(all_trips)
 
@@ -66,8 +66,9 @@ def trips_page(open_new: bool = False):
         # ── Table ──────────────────────────────────────────────────────
         table_rows = list(all_trips)
         table = ui.table(columns=COLUMNS, rows=table_rows, row_key='id').style(
-            'background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); width: 100%;'
-        )
+            'background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); '
+            'width: 100%; flex: 1;'
+        ).props('flat')
 
         table.add_slot('body-cell-status', '''
             <q-td :props="props">

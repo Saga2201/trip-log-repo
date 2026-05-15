@@ -29,8 +29,10 @@ def insights_page():
     total_trips    = len(enriched)
     avg_booking    = (total_revenue / total_trips) if total_trips else 0
 
-    with ui.element('div').style(f'background-color: {PAGE_BG}; min-height: 100vh; padding: 24px; box-sizing: border-box;'):
-        ui.label('📊 Business Insights').style('font-size: 20px; font-weight: 700; color: #1e3a5f; margin-bottom: 20px;')
+    with ui.column().style('width: 100%; padding: 24px; box-sizing: border-box; flex: 1; gap: 0;'):
+        with ui.row().style('align-items: center; gap: 10px; margin-bottom: 20px;'):
+            ui.icon('bar_chart').style('color: #1e3a5f; font-size: 28px;')
+            ui.label('Business Insights').style('font-size: 20px; font-weight: 700; color: #1e3a5f;')
 
         # ── KPI Cards ─────────────────────────────────────────────────
         with ui.row().style('gap: 16px; margin-bottom: 24px; flex-wrap: wrap;'):
