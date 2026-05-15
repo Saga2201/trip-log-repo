@@ -3,12 +3,6 @@ import database
 from helpers import calc_pending, calc_received, calc_status
 from ui.components import sidebar, PAGE_BG
 
-STATUS_COLORS = {
-    'Paid':    ('background-color: #e8f5e9; color: #2e7d32;'),
-    'Partial': ('background-color: #fff3e0; color: #f57c00;'),
-    'Unpaid':  ('background-color: #ffebee; color: #e53935;'),
-}
-
 COLUMNS = [
     {'name': 'date',           'label': 'Date',        'field': 'date',           'sortable': True},
     {'name': 'vehicle_number', 'label': 'Vehicle No.', 'field': 'vehicle_number', 'sortable': True},
@@ -140,7 +134,7 @@ def _open_modal(trip_id, on_save):
         # ── Trip Details ───────────────────────────────────────────────
         _section_label('Trip Details')
         with ui.row().style('gap: 12px; flex-wrap: wrap;'):
-            f_date    = _field('Date *',             trip, 'date',            'text')
+            f_date    = _field('Date *',             trip, 'date',            'date')
             f_vehicle = _field('Vehicle Number *',   trip, 'vehicle_number',  'text')
             f_state   = _field('State',              trip, 'state',           'text')
             f_city    = _field('City',               trip, 'city',            'text')
@@ -233,7 +227,10 @@ def _section_label(text: str):
 
 def _field(label: str, trip, field: str, input_type: str):
     value = str(trip[field]) if trip and trip.get(field) is not None else ''
-    return ui.input(label=label, value=value).style('min-width: 180px; flex: 1;')
+    inp = ui.input(label=label, value=value).style('min-width: 180px; flex: 1;')
+    if input_type == 'date':
+        inp.props('type=date')
+    return inp
 
 
 def _confirm_delete(trip_id: int, on_done):
