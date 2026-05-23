@@ -403,7 +403,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
                 </div>
                 {form.party_rate && parseFloat(form.party_rate) > 0 && form.total_booking && (
                   <p className="text-xs text-emerald-600 font-semibold mt-1">
-                    Commission: ₹{(parseFloat(form.total_booking || 0) - parseFloat(form.party_rate)).toLocaleString('en-IN')}
+                    Commission: ₹{(parseFloat(form.party_rate) - parseFloat(form.total_booking || 0)).toLocaleString('en-IN')}
                   </p>
                 )}
               </Field>

@@ -89,7 +89,7 @@ def _enrich(trip: dict) -> dict:
     received = helpers.calc_received(p1, p2, p3)
     pending = helpers.calc_pending(total, p1, p2, p3)
     status = helpers.calc_status(pending, p1, p2, p3)
-    commission = total - party_rate if party_rate > 0 else 0.0
+    commission = party_rate - total if party_rate > 0 else 0.0
     return {**trip, 'received': received, 'pending': pending, 'status': status, 'commission': commission}
 
 

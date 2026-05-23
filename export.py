@@ -66,7 +66,7 @@ def export_to_excel(trips, dest_dir=None):
 
         # Columns 18–19: party rate and commission
         party_rate = trip.get('party_rate', 0) or 0
-        commission = total - party_rate if party_rate > 0 else 0
+        commission = party_rate - total if party_rate > 0 else 0
         ws.cell(row=row_idx, column=18, value=party_rate)
         ws.cell(row=row_idx, column=19, value=commission)
 

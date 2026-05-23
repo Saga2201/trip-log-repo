@@ -30,7 +30,7 @@ def _build_row(trip: dict) -> dict:
     weight_kg = trip.get('material_weight', 0) or 0
     party_rate = trip.get('party_rate', 0) or 0
     total = trip['total_booking']
-    commission = total - party_rate if party_rate > 0 else 0
+    commission = party_rate - total if party_rate > 0 else 0
     return {
         **trip,
         'route':      f"{trip['loading_address']} → {trip['unloading_address']}",
