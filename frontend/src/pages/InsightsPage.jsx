@@ -87,33 +87,34 @@ export default function InsightsPage() {
   const maxStateCount = states.length ? states[0][1] : 1
 
   return (
-    <div className="p-6 flex flex-col gap-6">
+    <div className="p-3 sm:p-6 flex flex-col gap-4 sm:gap-6">
       <div className="flex items-center gap-3">
-        <BarChart2 size={26} className="text-navy" />
-        <h1 className="text-xl font-bold text-navy">Business Insights</h1>
+        <BarChart2 size={24} className="text-navy" />
+        <h1 className="text-lg sm:text-xl font-bold text-navy">Business Insights</h1>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <KpiCard title="Total Revenue"    value={fmt(totalRevenue)}       accent="#1e3a5f" />
         <KpiCard title="Total Pending"    value={fmt(totalPending)}       accent="#e53935" />
         <KpiCard title="Total Trips"      value={trips.length.toString()} accent="#f57c00" />
         <KpiCard title="Avg. Booking"     value={fmt(avgBooking)}         accent="#2e7d32" />
-        <KpiCard title="Total Commission" value={fmt(totalCommission)}    accent="#7b1fa2" />
+        <KpiCard title="Total Commission" value={fmt(totalCommission)}    accent="#7b1fa2" className="col-span-2 sm:col-span-1" />
       </div>
 
       {/* Monthly chart + Pending list */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
           <p className="text-xs font-bold text-navy uppercase tracking-wide mb-4">Monthly Revenue</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={monthly} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={monthly} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f4f8" />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#888' }} axisLine={false} tickLine={false} />
               <YAxis
-                tick={{ fontSize: 11, fill: '#888' }}
+                tick={{ fontSize: 10, fill: '#888' }}
                 axisLine={false}
                 tickLine={false}
+                width={48}
                 tickFormatter={v => v >= 1000 ? `₹${(v/1000).toFixed(0)}k` : `₹${v}`}
               />
               <Tooltip content={customTooltip} />
@@ -122,7 +123,7 @@ export default function InsightsPage() {
           </ResponsiveContainer>
         </div>
 
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
           <p className="text-xs font-bold text-red-600 uppercase tracking-wide mb-4">Pending Payments</p>
           {pendingTrips.length === 0 ? (
             <p className="text-xs text-gray-400 mt-4">All trips are fully paid</p>
@@ -144,29 +145,31 @@ export default function InsightsPage() {
 
       {/* Vehicle table + State bars */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
           <p className="text-xs font-bold text-navy uppercase tracking-wide mb-4">Vehicle-wise Summary</p>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left text-xs text-gray-400 font-semibold pb-2">Vehicle</th>
-                <th className="text-center text-xs text-gray-400 font-semibold pb-2">Trips</th>
-                <th className="text-right text-xs text-gray-400 font-semibold pb-2">Earnings</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vehicles.map(([v, d]) => (
-                <tr key={v} className="border-b border-gray-50 last:border-0">
-                  <td className="py-2 text-xs font-bold text-navy">{v}</td>
-                  <td className="py-2 text-xs text-center text-gray-600">{d.trips}</td>
-                  <td className="py-2 text-xs text-right font-semibold text-gray-700">{fmt(d.earnings)}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[240px]">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left text-xs text-gray-400 font-semibold pb-2">Vehicle</th>
+                  <th className="text-center text-xs text-gray-400 font-semibold pb-2">Trips</th>
+                  <th className="text-right text-xs text-gray-400 font-semibold pb-2">Earnings</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {vehicles.map(([v, d]) => (
+                  <tr key={v} className="border-b border-gray-50 last:border-0">
+                    <td className="py-2 text-xs font-bold text-navy">{v}</td>
+                    <td className="py-2 text-xs text-center text-gray-600">{d.trips}</td>
+                    <td className="py-2 text-xs text-right font-semibold text-gray-700">{fmt(d.earnings)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5">
           <p className="text-xs font-bold text-navy uppercase tracking-wide mb-4">State-wise Trip Count</p>
           <div className="space-y-3">
             {states.map(([state, count]) => (

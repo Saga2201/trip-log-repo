@@ -233,15 +233,15 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden">
+      {/* Modal — bottom-sheet on mobile, centered dialog on sm+ */}
+      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-3xl max-h-[95vh] sm:max-h-[92vh] flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-navy text-white flex-shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-navy text-white flex-shrink-0">
           <div className="flex items-center gap-3">
             <Truck size={20} />
             <span className="text-base font-bold">{trip ? 'Edit Trip' : 'New Trip'}</span>
@@ -252,12 +252,12 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto flex-1 p-6 space-y-6">
+        <div className="overflow-y-auto flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6">
 
           {/* Trip Details */}
-          <div className="bg-blue-50 rounded-xl p-5">
+          <div className="bg-blue-50 rounded-xl p-4 sm:p-5">
             <SectionHeader icon={Truck} title="Trip Details" />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Date" required>
                 <input type="date" value={form.date} onChange={set('date')} className={inputCls} />
               </Field>
@@ -297,9 +297,9 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
           </div>
 
           {/* Contact Details */}
-          <div className="bg-green-50 rounded-xl p-5">
+          <div className="bg-green-50 rounded-xl p-4 sm:p-5">
             <SectionHeader icon={Phone} title="Contact Details" />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Driver Phone">
                 <input type="tel" value={form.driver_phone} onChange={set('driver_phone')} placeholder="10-digit number" className={inputCls} />
               </Field>
@@ -316,9 +316,9 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
           </div>
 
           {/* Route */}
-          <div className="bg-orange-50 rounded-xl p-5">
+          <div className="bg-orange-50 rounded-xl p-4 sm:p-5">
             <SectionHeader icon={MapPin} title="Route" />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="From (Loading Point)" required>
                 <input
                   type="text"
@@ -362,9 +362,9 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
           </div>
 
           {/* Payment Details */}
-          <div className="bg-purple-50 rounded-xl p-5">
+          <div className="bg-purple-50 rounded-xl p-4 sm:p-5">
             <SectionHeader icon={CreditCard} title="Payment Details" />
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <Field label="Total Booking (₹)" required>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₹</span>
@@ -428,7 +428,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
                 </div>
               ) : null
             })()}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[1, 2, 3].map(n => (
                 <PaymentCard
                   key={n}
@@ -446,7 +446,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
           </div>
 
           {/* Note */}
-          <div className="bg-yellow-50 rounded-xl p-5">
+          <div className="bg-yellow-50 rounded-xl p-4 sm:p-5">
             <SectionHeader icon={FileText} title="Note" />
             <textarea
               value={form.note}
@@ -465,17 +465,17 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200 flex-shrink-0">
+        <div className="flex items-center justify-end gap-3 px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex-shrink-0">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-lg text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition-colors"
+            className="flex-1 sm:flex-none px-5 py-2.5 sm:py-2 rounded-lg text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-6 py-2 rounded-lg text-sm font-bold text-white bg-navy hover:bg-navy-light disabled:opacity-50 transition-colors"
+            className="flex-1 sm:flex-none px-6 py-2.5 sm:py-2 rounded-lg text-sm font-bold text-white bg-navy hover:bg-navy-light disabled:opacity-50 transition-colors"
           >
             {saving ? 'Saving…' : trip ? 'Save Changes' : 'Create Trip'}
           </button>
