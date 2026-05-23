@@ -11,6 +11,7 @@ HEADERS = [
     'Total Booking (₹)', 'Payment 1 (₹)', 'Payment 2 (₹)', 'Payment 3 (₹)',
     'Material', 'Weight (T)',
     'Received (₹)', 'Pending (₹)', 'Status',
+    'Party Rate (₹)', 'Commission (₹)',
 ]
 
 FIELD_MAP = [
@@ -62,6 +63,12 @@ def export_to_excel(trips, dest_dir=None):
         ws.cell(row=row_idx, column=15, value=received)
         ws.cell(row=row_idx, column=16, value=pending)
         ws.cell(row=row_idx, column=17, value=status)
+
+        # Columns 18–19: party rate and commission
+        party_rate = trip.get('party_rate', 0) or 0
+        commission = total - party_rate if party_rate > 0 else 0
+        ws.cell(row=row_idx, column=18, value=party_rate)
+        ws.cell(row=row_idx, column=19, value=commission)
 
     for col in ws.columns:
         max_len = max((len(str(cell.value or '')) for cell in col), default=10)

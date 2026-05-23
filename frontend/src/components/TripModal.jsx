@@ -24,6 +24,7 @@ const EMPTY_FORM = {
   material: '',
   material_weight: '',
   total_booking: '',
+  party_rate: '',
   payment_1: '',
   payment_2: '',
   payment_3: '',
@@ -101,6 +102,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
           material: t.material || '',
           material_weight: t.material_weight?.toString() || '',
           total_booking: t.total_booking?.toString() || '',
+          party_rate: t.party_rate?.toString() || '',
           payment_1: t.payment_1?.toString() || '',
           payment_2: t.payment_2?.toString() || '',
           payment_3: t.payment_3?.toString() || '',
@@ -191,6 +193,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
         material: form.material,
         material_weight: parseFloat(form.material_weight) || 0,
         total_booking: parseFloat(form.total_booking) || 0,
+        party_rate: parseFloat(form.party_rate) || 0,
         payment_1: parseFloat(form.payment_1) || 0,
         payment_2: parseFloat(form.payment_2) || 0,
         payment_3: parseFloat(form.payment_3) || 0,
@@ -368,7 +371,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
           {/* Payment Details */}
           <div className="bg-purple-50 rounded-xl p-5">
             <SectionHeader icon={CreditCard} title="Payment Details" />
-            <div className="mb-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <Field label="Total Booking (₹)" required>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₹</span>
@@ -383,6 +386,26 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
                     className={inputCls + ' pl-7'}
                   />
                 </div>
+              </Field>
+              <Field label="Party Rate (₹)">
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.party_rate}
+                    onChange={set('party_rate')}
+                    onKeyDown={blockNonNumeric}
+                    placeholder="0"
+                    className={inputCls + ' pl-7'}
+                  />
+                </div>
+                {form.party_rate && parseFloat(form.party_rate) > 0 && form.total_booking && (
+                  <p className="text-xs text-emerald-600 font-semibold mt-1">
+                    Commission: ₹{(parseFloat(form.total_booking || 0) - parseFloat(form.party_rate)).toLocaleString('en-IN')}
+                  </p>
+                )}
               </Field>
             </div>
             {/* Live payment summary */}

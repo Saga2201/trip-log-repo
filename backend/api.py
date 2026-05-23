@@ -71,6 +71,7 @@ class TripIn(BaseModel):
     payment_3_image: Optional[str] = None
     material: str = ''
     material_weight: float = 0.0
+    party_rate: float = 0.0
 
 
 # ---------------------------------------------------------------------------
@@ -79,15 +80,17 @@ class TripIn(BaseModel):
 
 
 def _enrich(trip: dict) -> dict:
-    """Add computed received / pending / status fields to a trip dict."""
+    """Add computed received / pending / status / commission fields to a trip dict."""
     p1 = trip.get('payment_1') or 0.0
     p2 = trip.get('payment_2') or 0.0
     p3 = trip.get('payment_3') or 0.0
     total = trip.get('total_booking') or 0.0
+    party_rate = trip.get('party_rate') or 0.0
     received = helpers.calc_received(p1, p2, p3)
     pending = helpers.calc_pending(total, p1, p2, p3)
     status = helpers.calc_status(pending, p1, p2, p3)
-    return {**trip, 'received': received, 'pending': pending, 'status': status}
+    commission = total - party_rate if party_rate > 0 else 0.0
+    return {**trip, 'received': received, 'pending': pending, 'status': status, 'commission': commission}
 
 
 def _trip_or_404(trip_id: int) -> dict:
@@ -131,6 +134,7 @@ def create_trip(body: TripIn):
         note=body.note,
         material=body.material,
         material_weight=body.material_weight,
+        party_rate=body.party_rate,
     )
     return {'id': trip_id}
 
@@ -165,6 +169,7 @@ def update_trip(trip_id: int, body: TripIn):
         note=body.note,
         material=body.material,
         material_weight=body.material_weight,
+        party_rate=body.party_rate,
     )
     return _enrich(database.get_trip_by_id(trip_id))
 
@@ -238,6 +243,7 @@ async def upload_image(trip_id: int, n: int, file: UploadFile = File(...)):
         note=trip.get('note', ''),
         material=trip.get('material', ''),
         material_weight=trip.get('material_weight', 0.0),
+        party_rate=trip.get('party_rate', 0.0),
     )
 
     return {'url': f'/payment_images/{filename}'}
@@ -279,6 +285,7 @@ def delete_image(trip_id: int, n: int):
         note=trip.get('note', ''),
         material=trip.get('material', ''),
         material_weight=trip.get('material_weight', 0.0),
+        party_rate=trip.get('party_rate', 0.0),
     )
 
 

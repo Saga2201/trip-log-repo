@@ -102,9 +102,10 @@ export default function TripsPage({ onEditTrip, refreshKey }) {
   }, [tabTrips, search])
 
   // KPIs always over all trips
-  const totalRevenue  = trips.reduce((s, t) => s + (t.total_booking || 0), 0)
-  const totalReceived = trips.reduce((s, t) => s + (t.received    || 0), 0)
-  const totalPending  = trips.reduce((s, t) => s + (t.pending     || 0), 0)
+  const totalRevenue    = trips.reduce((s, t) => s + (t.total_booking || 0), 0)
+  const totalReceived   = trips.reduce((s, t) => s + (t.received    || 0), 0)
+  const totalPending    = trips.reduce((s, t) => s + (t.pending     || 0), 0)
+  const totalCommission = trips.reduce((s, t) => s + (t.commission  || 0), 0)
 
   const handleConfirm = async () => {
     if (!confirm) return
@@ -137,11 +138,12 @@ export default function TripsPage({ onEditTrip, refreshKey }) {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Total Trips"    value={trips.length.toString()} accent="#f57c00" />
-        <KpiCard title="Total Revenue"  value={fmt(totalRevenue)}       accent="#1e3a5f" />
-        <KpiCard title="Total Received" value={fmt(totalReceived)}      accent="#2e7d32" />
-        <KpiCard title="Total Pending"  value={fmt(totalPending)}       accent="#e53935" />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <KpiCard title="Total Trips"      value={trips.length.toString()} accent="#f57c00" />
+        <KpiCard title="Total Revenue"    value={fmt(totalRevenue)}       accent="#1e3a5f" />
+        <KpiCard title="Total Received"   value={fmt(totalReceived)}      accent="#2e7d32" />
+        <KpiCard title="Total Pending"    value={fmt(totalPending)}       accent="#e53935" />
+        <KpiCard title="Total Commission" value={fmt(totalCommission)}    accent="#7b1fa2" />
       </div>
 
       {/* Tabs + Search bar */}
@@ -232,7 +234,7 @@ export default function TripsPage({ onEditTrip, refreshKey }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  {['Date', 'Vehicle #', 'From → To', 'Material', 'Weight (T)', 'Booking', 'Received', 'Pending', 'Status', ''].map(h => (
+                  {['Date', 'Vehicle #', 'From → To', 'Material', 'Weight (T)', 'Booking', 'Party Rate', 'Commission', 'Received', 'Pending', 'Status', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -291,6 +293,12 @@ export default function TripsPage({ onEditTrip, refreshKey }) {
                       }
                     </td>
                     <td className="px-4 py-3 font-medium text-gray-700 whitespace-nowrap">{fmt(t.total_booking)}</td>
+                    <td className="px-4 py-3 font-medium text-gray-500 whitespace-nowrap">
+                      {t.party_rate ? fmt(t.party_rate) : <span className="text-gray-300">—</span>}
+                    </td>
+                    <td className="px-4 py-3 font-semibold whitespace-nowrap" style={{ color: t.commission > 0 ? '#7b1fa2' : '#9e9e9e' }}>
+                      {t.commission > 0 ? fmt(t.commission) : <span className="text-gray-300">—</span>}
+                    </td>
                     <td className="px-4 py-3 font-medium text-green-700 whitespace-nowrap">{fmt(t.received)}</td>
                     <td className="px-4 py-3 font-medium text-red-600 whitespace-nowrap">{fmt(t.pending)}</td>
                     <td className="px-4 py-3">{statusBadge(t.status)}</td>

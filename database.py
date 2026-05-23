@@ -49,6 +49,8 @@ def init_db():
             conn.execute("ALTER TABLE trips ADD COLUMN material TEXT DEFAULT ''")
         if 'material_weight' not in existing:
             conn.execute('ALTER TABLE trips ADD COLUMN material_weight REAL DEFAULT 0')
+        if 'party_rate' not in existing:
+            conn.execute('ALTER TABLE trips ADD COLUMN party_rate REAL DEFAULT 0')
         conn.commit()
 
 
@@ -57,7 +59,7 @@ def add_trip(date, vehicle_number, state, city, driver_phone, owner_phone,
              payment_1=0.0, payment_2=0.0, payment_3=0.0,
              payment_1_image=None, payment_2_image=None, payment_3_image=None,
              party_name='', party_contact='', note='',
-             material='', material_weight=0.0):
+             material='', material_weight=0.0, party_rate=0.0):
     with _get_conn() as conn:
         cursor = conn.execute('''
             INSERT INTO trips (date, vehicle_number, state, city, driver_phone, owner_phone,
@@ -65,14 +67,14 @@ def add_trip(date, vehicle_number, state, city, driver_phone, owner_phone,
                 payment_1, payment_2, payment_3, created_at,
                 payment_1_image, payment_2_image, payment_3_image,
                 party_name, party_contact, note,
-                material, material_weight)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                material, material_weight, party_rate)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (date, vehicle_number, state, city, driver_phone, owner_phone,
               loading_address, unloading_address, total_booking,
               payment_1, payment_2, payment_3, datetime.now().isoformat(),
               payment_1_image, payment_2_image, payment_3_image,
               party_name, party_contact, note,
-              material, material_weight))
+              material, material_weight, party_rate))
         conn.commit()
         return cursor.lastrowid
 
@@ -97,7 +99,7 @@ def update_trip(trip_id, date, vehicle_number, state, city, driver_phone, owner_
                 payment_1=0.0, payment_2=0.0, payment_3=0.0,
                 payment_1_image=None, payment_2_image=None, payment_3_image=None,
                 party_name='', party_contact='', note='',
-                material='', material_weight=0.0):
+                material='', material_weight=0.0, party_rate=0.0):
     with _get_conn() as conn:
         conn.execute('''
             UPDATE trips SET date=?, vehicle_number=?, state=?, city=?,
@@ -106,14 +108,14 @@ def update_trip(trip_id, date, vehicle_number, state, city, driver_phone, owner_
                 payment_1=?, payment_2=?, payment_3=?,
                 payment_1_image=?, payment_2_image=?, payment_3_image=?,
                 party_name=?, party_contact=?, note=?,
-                material=?, material_weight=?
+                material=?, material_weight=?, party_rate=?
             WHERE id=?
         ''', (date, vehicle_number, state, city, driver_phone, owner_phone,
               loading_address, unloading_address, total_booking,
               payment_1, payment_2, payment_3,
               payment_1_image, payment_2_image, payment_3_image,
               party_name, party_contact, note,
-              material, material_weight,
+              material, material_weight, party_rate,
               trip_id))
         conn.commit()
 

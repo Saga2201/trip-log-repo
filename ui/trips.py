@@ -15,6 +15,8 @@ COLUMNS = [
     {'name': 'material',        'label': 'Material',      'field': 'material'},
     {'name': 'weight_t',        'label': 'Weight (T)',    'field': 'weight_t'},
     {'name': 'total_booking',   'label': 'Booking ₹',    'field': 'total_booking',   'sortable': True},
+     {'name': 'party_rate',      'label': 'Party Rate ₹', 'field': 'party_rate',      'sortable': True},
+    {'name': 'commission',      'label': 'Commission ₹', 'field': 'commission',      'sortable': True},
     {'name': 'received',        'label': 'Received ₹',   'field': 'received',        'sortable': True},
     {'name': 'status',          'label': 'Status',        'field': 'status'},
     {'name': 'actions',         'label': 'Actions',       'field': 'actions'},
@@ -26,6 +28,9 @@ def _build_row(trip: dict) -> dict:
     pending = calc_pending(trip['total_booking'], p1, p2, p3)
     received = calc_received(p1, p2, p3)
     weight_kg = trip.get('material_weight', 0) or 0
+    party_rate = trip.get('party_rate', 0) or 0
+    total = trip['total_booking']
+    commission = total - party_rate if party_rate > 0 else 0
     return {
         **trip,
         'route':      f"{trip['loading_address']} → {trip['unloading_address']}",
@@ -34,6 +39,7 @@ def _build_row(trip: dict) -> dict:
         'pending':    pending,
         'status':     calc_status(pending, p1, p2, p3),
         'weight_t':   f"{weight_kg / 1000:.2f} T" if weight_kg else '—',
+        'commission': commission,
     }
 
 
@@ -231,6 +237,7 @@ def _open_modal(trip_id, on_save):
             party_contact=f_party_contact.value.strip() if f_party_contact.value else '',
             material=f_material.value.strip() if f_material.value else '',
             material_weight=float(f_material_weight.value or 0),
+            party_rate=float(f_party_rate.value or 0),
         )
         if is_edit:
             database.update_trip(trip['id'], **kwargs)
@@ -320,7 +327,8 @@ def _open_modal(trip_id, on_save):
                 # ── Payment Details ───────────────────────────────────
                 with _section_box('currency_rupee', 'Payment Details'):
                     with ui.row().style('gap: 14px; flex-wrap: wrap; width: 100%;'):
-                        f_total = _field('Total Booking ₹ *', trip, 'total_booking', 'number', 'Full booking amount')
+                        f_total      = _field('Total Booking ₹ *', trip, 'total_booking', 'number', 'Amount charged to customer')
+                        f_party_rate = _field('Party Rate ₹',       trip, 'party_rate',    'number', 'Original deal amount (to driver/transporter)')
 
                     with ui.row().style('align-items: center; gap: 8px; margin: 16px 0 10px;'):
                         ui.separator().style('flex: 1;')
