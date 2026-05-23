@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Truck, Phone, MapPin, CreditCard, FileText } from 'lucide-react'
 import { getLocations, createTrip, updateTrip, uploadImage, deleteImage, api } from '../api'
 import PaymentCard from './PaymentCard'
@@ -7,8 +7,6 @@ import Combobox from './Combobox'
 // Cache locations globally so we only fetch once per session
 let _locationsCache = null
 
-// Vehicle number plate: 2 letters (state) + 2 digits + 4 digits = e.g. GJ011234
-const PLATE_REGEX = /^[A-Z]{2}[0-9]{2}[0-9]{4}$/
 
 const EMPTY_FORM = {
   date: new Date().toISOString().slice(0, 10),
@@ -63,7 +61,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
   const [cities, setCities] = useState([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [plateError, setPlateError] = useState('')
+  const [phoneErrors, setPhoneErrors] = useState({ driver_phone: '', owner_phone: '', party_contact: '' })
 
   // Load locations once, with caching
   useEffect(() => {
@@ -83,7 +81,7 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
   useEffect(() => {
     if (!open) return
     setError('')
-    setPlateError('')
+    setPhoneErrors({ driver_phone: '', owner_phone: '', party_contact: '' })
     if (tripId) {
       api.get(`/trips/${tripId}`).then(r => {
         const t = r.data
@@ -135,25 +133,25 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
   const setVal = (field, val) => setForm(f => ({ ...f, [field]: val }))
 
-  // Only allow letters and digits while typing the plate; auto-uppercase
-  const handlePlateChange = (e) => {
-    const raw = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8)
-    setForm(f => ({ ...f, vehicle_number: raw }))
-    if (plateError) setPlateError('')
-  }
-
-  const handlePlateBlur = () => {
-    const v = form.vehicle_number
-    if (v && !PLATE_REGEX.test(v)) {
-      setPlateError('Invalid format. Expected: GJ011234 (2 letters + 2 digits + 4 digits)')
-    } else {
-      setPlateError('')
-    }
-  }
-
   // Block e / E / + / - / . in number inputs (type="number" still allows them)
   const blockNonNumeric = (e) => {
     if (['e', 'E', '+', '-', '.'].includes(e.key)) e.preventDefault()
+  }
+
+  // Phone: only digits, max 10 chars
+  const handlePhoneChange = (field) => (e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 10)
+    setForm(f => ({ ...f, [field]: digits }))
+    if (phoneErrors[field]) setPhoneErrors(p => ({ ...p, [field]: '' }))
+  }
+
+  const handlePhoneBlur = (field) => () => {
+    const val = form[field]
+    if (val && val.length !== 10) {
+      setPhoneErrors(p => ({ ...p, [field]: 'Must be exactly 10 digits' }))
+    } else {
+      setPhoneErrors(p => ({ ...p, [field]: '' }))
+    }
   }
 
   const handleSave = async () => {
@@ -161,9 +159,21 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
       setError('Please fill in all required fields.')
       return
     }
-    if (!PLATE_REGEX.test(form.vehicle_number)) {
-      setPlateError('Invalid format. Expected: GJ011234 (2 letters + 2 digits + 4 digits)')
-      setError('Please fix the vehicle number before saving.')
+    // Phone validation — if filled, must be exactly 10 digits
+    const phoneFields = ['driver_phone', 'owner_phone', 'party_contact']
+    const newPhoneErrors = {}
+    let hasPhoneError = false
+    phoneFields.forEach(f => {
+      if (form[f] && form[f].length !== 10) {
+        newPhoneErrors[f] = 'Must be exactly 10 digits'
+        hasPhoneError = true
+      } else {
+        newPhoneErrors[f] = ''
+      }
+    })
+    if (hasPhoneError) {
+      setPhoneErrors(newPhoneErrors)
+      setError('Please fix the contact number errors before saving.')
       return
     }
     const totalBooking = parseFloat(form.total_booking) || 0
@@ -265,16 +275,10 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
                 <input
                   type="text"
                   value={form.vehicle_number}
-                  onChange={handlePlateChange}
-                  onBlur={handlePlateBlur}
+                  onChange={set('vehicle_number')}
                   placeholder="e.g. GJ01AB1234"
-                  maxLength={8}
-                  className={inputCls + ' uppercase font-mono tracking-widest' + (plateError ? ' border-red-400 ring-1 ring-red-400' : '')}
+                  className={inputCls + ' uppercase font-mono tracking-widest'}
                 />
-                {plateError && (
-                  <p className="text-xs text-red-500 mt-0.5">{plateError}</p>
-                )}
-                <p className="text-xs text-gray-400">Format: 2 letters + 2 digits + 4 digits · e.g. GJ011234</p>
               </Field>
               <Field label="State">
                 <Combobox
@@ -301,16 +305,46 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
             <SectionHeader icon={Phone} title="Contact Details" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Driver Phone">
-                <input type="tel" value={form.driver_phone} onChange={set('driver_phone')} placeholder="10-digit number" className={inputCls} />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={form.driver_phone}
+                  onChange={handlePhoneChange('driver_phone')}
+                  onBlur={handlePhoneBlur('driver_phone')}
+                  placeholder="10-digit number"
+                  maxLength={10}
+                  className={inputCls + (phoneErrors.driver_phone ? ' border-red-400 ring-1 ring-red-400' : '')}
+                />
+                {phoneErrors.driver_phone && <p className="text-xs text-red-500">{phoneErrors.driver_phone}</p>}
               </Field>
               <Field label="Owner Phone">
-                <input type="tel" value={form.owner_phone} onChange={set('owner_phone')} placeholder="10-digit number" className={inputCls} />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={form.owner_phone}
+                  onChange={handlePhoneChange('owner_phone')}
+                  onBlur={handlePhoneBlur('owner_phone')}
+                  placeholder="10-digit number"
+                  maxLength={10}
+                  className={inputCls + (phoneErrors.owner_phone ? ' border-red-400 ring-1 ring-red-400' : '')}
+                />
+                {phoneErrors.owner_phone && <p className="text-xs text-red-500">{phoneErrors.owner_phone}</p>}
               </Field>
               <Field label="Party Name">
                 <input type="text" value={form.party_name} onChange={set('party_name')} placeholder="Party / consignee name" className={inputCls} />
               </Field>
               <Field label="Party Contact">
-                <input type="tel" value={form.party_contact} onChange={set('party_contact')} placeholder="10-digit number" className={inputCls} />
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  value={form.party_contact}
+                  onChange={handlePhoneChange('party_contact')}
+                  onBlur={handlePhoneBlur('party_contact')}
+                  placeholder="10-digit number"
+                  maxLength={10}
+                  className={inputCls + (phoneErrors.party_contact ? ' border-red-400 ring-1 ring-red-400' : '')}
+                />
+                {phoneErrors.party_contact && <p className="text-xs text-red-500">{phoneErrors.party_contact}</p>}
               </Field>
             </div>
           </div>
@@ -365,21 +399,6 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
           <div className="bg-purple-50 rounded-xl p-4 sm:p-5">
             <SectionHeader icon={CreditCard} title="Payment Details" />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <Field label="Total Booking (₹)" required>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₹</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={form.total_booking}
-                    onChange={set('total_booking')}
-                    onKeyDown={blockNonNumeric}
-                    placeholder="0"
-                    className={inputCls + ' pl-7'}
-                  />
-                </div>
-              </Field>
               <Field label="Party Rate (₹)">
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₹</span>
@@ -399,6 +418,21 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
                     Commission: ₹{(parseFloat(form.party_rate) - parseFloat(form.total_booking || 0)).toLocaleString('en-IN')}
                   </p>
                 )}
+              </Field>
+              <Field label="Total Booking (₹)" required>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-semibold">₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.total_booking}
+                    onChange={set('total_booking')}
+                    onKeyDown={blockNonNumeric}
+                    placeholder="0"
+                    className={inputCls + ' pl-7'}
+                  />
+                </div>
               </Field>
             </div>
             {/* Live payment summary */}
