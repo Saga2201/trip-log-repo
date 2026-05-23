@@ -141,7 +141,7 @@ export default function TripsPage({ onEditTrip, refreshKey }) {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <KpiCard title="Total Trips"      value={trips.length.toString()} accent="#f57c00" />
         <KpiCard title="Total Revenue"    value={fmt(totalRevenue)}       accent="#1e3a5f" />
-        <KpiCard title="Total Received"   value={fmt(totalReceived)}      accent="#2e7d32" />
+        <KpiCard title="Total Paid"        value={fmt(totalReceived)}      accent="#2e7d32" />
         <KpiCard title="Total Pending"    value={fmt(totalPending)}       accent="#e53935" />
         <KpiCard title="Total Commission" value={fmt(totalCommission)}    accent="#7b1fa2" />
       </div>
@@ -234,7 +234,7 @@ export default function TripsPage({ onEditTrip, refreshKey }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  {['Date', 'Vehicle #', 'From → To', 'Material', 'Weight (T)', 'Booking', 'Party Rate', 'Commission', 'Received', 'Pending', 'Status', ''].map(h => (
+                  {['Date', 'Vehicle #', 'From → To', 'Material', 'Weight (T)', 'Booking', 'Party Rate', 'Commission', 'Paid', 'Pending', 'Status', ''].map(h => (
                     <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
