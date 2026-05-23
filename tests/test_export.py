@@ -77,9 +77,9 @@ def test_export_includes_material_and_weight_columns(tmp_path):
     assert 'Weight (T)' in headers
 
 
-def test_export_weight_converted_to_tonnes(tmp_path):
+def test_export_weight_in_tonnes(tmp_path):
     trips_with_material = [
-        {**SAMPLE_TRIPS[0], 'material': 'Steel Rods', 'material_weight': 12000.0},
+        {**SAMPLE_TRIPS[0], 'material': 'Steel Rods', 'material_weight': 12.5},
         {**SAMPLE_TRIPS[1], 'material': '',            'material_weight': 0.0},
     ]
     out_path = export_to_excel(trips_with_material, dest_dir=str(tmp_path))
@@ -88,8 +88,8 @@ def test_export_weight_converted_to_tonnes(tmp_path):
     headers = [ws.cell(1, col).value for col in range(1, ws.max_column + 1)]
     weight_col = headers.index('Weight (T)') + 1
     material_col = headers.index('Material') + 1
-    # row 2 = first trip: 12000 kg → 12.0 T
-    assert ws.cell(2, weight_col).value == 12.0
+    # weight is stored in tonnes — exported as-is
+    assert ws.cell(2, weight_col).value == 12.5
     assert ws.cell(2, material_col).value == 'Steel Rods'
-    # row 3 = second trip: 0 kg → 0.0 T
+    # row 3 = second trip: 0 T
     assert ws.cell(3, weight_col).value == 0.0

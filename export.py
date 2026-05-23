@@ -47,9 +47,9 @@ def export_to_excel(trips, dest_dir=None):
         # Column 13: Material
         ws.cell(row=row_idx, column=13, value=trip.get('material', ''))
 
-        # Column 14: Weight (T) — convert kg → tonnes
-        weight_kg = trip.get('material_weight', 0) or 0
-        ws.cell(row=row_idx, column=14, value=round(weight_kg / 1000, 3))
+        # Column 14: Weight (T) — value already stored in tonnes
+        weight_t = trip.get('material_weight', 0) or 0
+        ws.cell(row=row_idx, column=14, value=round(weight_t, 3))
 
         # Columns 15–17: computed
         p1 = trip.get('payment_1', 0) or 0

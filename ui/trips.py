@@ -27,7 +27,7 @@ def _build_row(trip: dict) -> dict:
     p1, p2, p3 = trip['payment_1'], trip['payment_2'], trip['payment_3']
     pending = calc_pending(trip['total_booking'], p1, p2, p3)
     received = calc_received(p1, p2, p3)
-    weight_kg = trip.get('material_weight', 0) or 0
+    weight_t = trip.get('material_weight', 0) or 0
     party_rate = trip.get('party_rate', 0) or 0
     total = trip['total_booking']
     commission = party_rate - total if party_rate > 0 else 0
@@ -38,7 +38,7 @@ def _build_row(trip: dict) -> dict:
         'received':   received,
         'pending':    pending,
         'status':     calc_status(pending, p1, p2, p3),
-        'weight_t':   f"{weight_kg / 1000:.2f} T" if weight_kg else '—',
+        'weight_t':   f"{weight_t:.2f} T" if weight_t else '—',
         'commission': commission,
     }
 
@@ -312,8 +312,8 @@ def _open_modal(trip_id, on_save):
                         f_unload  = _field('Unloading Address *', trip, 'unloading_address','text', 'Delivery location')
 
                     with ui.row().style('gap: 14px; flex-wrap: wrap; width: 100%; margin-top: 12px;'):
-                        f_material        = _field('Material',    trip, 'material',        'text',   'e.g. Cotton Bales, Steel Rods')
-                        f_material_weight = _field('Weight (kg)', trip, 'material_weight', 'number', 'Weight of cargo in kg')
+                        f_material        = _field('Material',   trip, 'material',        'text',   'e.g. Cotton Bales, Steel Rods')
+                        f_material_weight = _field('Weight (T)', trip, 'material_weight', 'number', 'Weight of cargo in tonnes')
 
                 # ── Contact Details ───────────────────────────────────
                 with _section_box('contacts', 'Contact Details'):

@@ -288,7 +288,7 @@ export default function TripsPage({ onEditTrip, refreshKey }) {
                     </td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {t.material_weight
-                        ? `${(t.material_weight / 1000).toFixed(2)} T`
+                        ? `${Number(t.material_weight).toFixed(2)} T`
                         : <span className="text-gray-300">—</span>
                       }
                     </td>

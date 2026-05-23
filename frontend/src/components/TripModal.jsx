@@ -346,24 +346,17 @@ export default function TripModal({ open, tripId, onClose, onSaved }) {
                   className={inputCls}
                 />
               </Field>
-              <Field label="Weight (kg)">
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.material_weight}
-                    onChange={set('material_weight')}
-                    onKeyDown={blockNonNumeric}
-                    placeholder="0"
-                    className={inputCls + ' pr-20'}
-                  />
-                  {form.material_weight && parseFloat(form.material_weight) > 0 && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium pointer-events-none">
-                      = {(parseFloat(form.material_weight) / 1000).toFixed(2)} T
-                    </span>
-                  )}
-                </div>
+              <Field label="Weight (T)">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.material_weight}
+                  onChange={set('material_weight')}
+                  onKeyDown={blockNonNumeric}
+                  placeholder="0"
+                  className={inputCls}
+                />
               </Field>
             </div>
           </div>
