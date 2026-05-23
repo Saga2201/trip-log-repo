@@ -9,6 +9,7 @@ HEADERS = [
     'Driver Phone', 'Owner Phone',
     'Loading Address', 'Unloading Address',
     'Total Booking (₹)', 'Payment 1 (₹)', 'Payment 2 (₹)', 'Payment 3 (₹)',
+    'Material', 'Weight (T)',
     'Received (₹)', 'Pending (₹)', 'Status',
 ]
 
@@ -38,9 +39,18 @@ def export_to_excel(trips, dest_dir=None):
         cell.alignment = Alignment(horizontal='center')
 
     for row_idx, trip in enumerate(trips, start=2):
+        # Columns 1–12: direct fields
         for col_idx, field in enumerate(FIELD_MAP, start=1):
             ws.cell(row=row_idx, column=col_idx, value=trip.get(field, ''))
 
+        # Column 13: Material
+        ws.cell(row=row_idx, column=13, value=trip.get('material', ''))
+
+        # Column 14: Weight (T) — convert kg → tonnes
+        weight_kg = trip.get('material_weight', 0) or 0
+        ws.cell(row=row_idx, column=14, value=round(weight_kg / 1000, 3))
+
+        # Columns 15–17: computed
         p1 = trip.get('payment_1', 0) or 0
         p2 = trip.get('payment_2', 0) or 0
         p3 = trip.get('payment_3', 0) or 0
@@ -49,9 +59,9 @@ def export_to_excel(trips, dest_dir=None):
         pending = calc_pending(total, p1, p2, p3)
         status = calc_status(pending, p1, p2, p3)
 
-        ws.cell(row=row_idx, column=13, value=received)
-        ws.cell(row=row_idx, column=14, value=pending)
-        ws.cell(row=row_idx, column=15, value=status)
+        ws.cell(row=row_idx, column=15, value=received)
+        ws.cell(row=row_idx, column=16, value=pending)
+        ws.cell(row=row_idx, column=17, value=status)
 
     for col in ws.columns:
         max_len = max((len(str(cell.value or '')) for cell in col), default=10)
