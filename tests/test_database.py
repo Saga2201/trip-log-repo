@@ -77,3 +77,62 @@ def test_delete_trip():
     )
     database.delete_trip(1)
     assert database.get_all_trips() == []
+
+
+def test_add_trip_with_material_and_weight():
+    trip_id = database.add_trip(
+        date='2026-05-23',
+        vehicle_number='GJ 01 AB 1234',
+        state='Gujarat', city='Surat',
+        driver_phone='', owner_phone='',
+        loading_address='Surat Market',
+        unloading_address='Mumbai Hub',
+        total_booking=15000.0,
+        material='Cotton Bales',
+        material_weight=8500.0,  # kg
+    )
+    trip = database.get_trip_by_id(trip_id)
+    assert trip['material'] == 'Cotton Bales'
+    assert trip['material_weight'] == 8500.0
+
+
+def test_update_trip_material_and_weight():
+    database.add_trip(
+        date='2026-05-23',
+        vehicle_number='GJ 01 AB 1234',
+        state='Gujarat', city='Surat',
+        driver_phone='', owner_phone='',
+        loading_address='Surat Market',
+        unloading_address='Mumbai Hub',
+        total_booking=15000.0,
+    )
+    database.update_trip(
+        trip_id=1,
+        date='2026-05-23',
+        vehicle_number='GJ 01 AB 1234',
+        state='Gujarat', city='Surat',
+        driver_phone='', owner_phone='',
+        loading_address='Surat Market',
+        unloading_address='Mumbai Hub',
+        total_booking=15000.0,
+        material='Steel Rods',
+        material_weight=12000.0,
+    )
+    trip = database.get_trip_by_id(1)
+    assert trip['material'] == 'Steel Rods'
+    assert trip['material_weight'] == 12000.0
+
+
+def test_material_defaults_to_empty_for_old_trips():
+    """Simulates a trip created without material fields (migration path)."""
+    trip_id = database.add_trip(
+        date='2026-05-23',
+        vehicle_number='RJ 14 CD 9012',
+        state='Rajasthan', city='Jaipur',
+        driver_phone='', owner_phone='',
+        loading_address='Jaipur', unloading_address='Delhi',
+        total_booking=5000.0,
+    )
+    trip = database.get_trip_by_id(trip_id)
+    assert trip['material'] == ''
+    assert trip['material_weight'] == 0.0
