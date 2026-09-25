@@ -58,6 +58,8 @@ def init_db():
                 serial_number TEXT NOT NULL UNIQUE,
                 date TEXT NOT NULL,
                 vehicle_number TEXT NOT NULL,
+                mobile1 TEXT DEFAULT '',
+                mobile2 TEXT DEFAULT '',
                 from_location TEXT DEFAULT '',
                 to_location TEXT DEFAULT '',
                 consignor_name TEXT DEFAULT '',
@@ -111,6 +113,11 @@ def init_db():
                 last_seq INTEGER NOT NULL DEFAULT 0
             )
         ''')
+        # Additive column migrations for existing invoices tables.
+        existing_inv = {row[1] for row in conn.execute('PRAGMA table_info(invoices)')}
+        for col in ('mobile1', 'mobile2'):
+            if col not in existing_inv:
+                conn.execute(f"ALTER TABLE invoices ADD COLUMN {col} TEXT DEFAULT ''")
         conn.commit()
 
 
@@ -205,6 +212,7 @@ from typing import List, Optional, Tuple
 
 _INVOICE_COLS = [
     "date", "vehicle_number",
+    "mobile1", "mobile2",
     "from_location", "to_location",
     "consignor_name", "consignor_address",
     "consignee_name", "consignee_address",

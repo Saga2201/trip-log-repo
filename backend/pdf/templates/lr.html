@@ -10,7 +10,8 @@
       <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
-      <div>Mobile: {{ company.phones | join(', ') }}</div>
+      {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
+      {% if _mobiles %}<div>Mobile: {{ _mobiles | join(', ') }}</div>{% endif %}
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
     </td>
   </tr>

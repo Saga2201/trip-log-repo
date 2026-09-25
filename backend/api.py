@@ -330,6 +330,8 @@ from backend.pdf.generator import render_pdf, render_all_zip
 class InvoiceIn(BaseModel):
     date: str
     vehicle_number: str
+    mobile1: str = ""
+    mobile2: str = ""
     from_location: str = ""
     to_location: str = ""
     consignor_name: str = ""

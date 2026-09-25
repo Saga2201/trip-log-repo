@@ -264,6 +264,8 @@ Open `database.py`. Inside `init_db()`, after the existing `trips` migrations bl
                 serial_number TEXT NOT NULL UNIQUE,
                 date TEXT NOT NULL,
                 vehicle_number TEXT NOT NULL,
+                mobile1 TEXT DEFAULT '',
+                mobile2 TEXT DEFAULT '',
                 from_location TEXT DEFAULT '',
                 to_location TEXT DEFAULT '',
                 consignor_name TEXT DEFAULT '',
@@ -331,6 +333,7 @@ from typing import List, Optional, Tuple  # top-level import if not already pres
 
 _INVOICE_COLS = [
     "date", "vehicle_number",
+    "mobile1", "mobile2",
     "from_location", "to_location",
     "consignor_name", "consignor_address",
     "consignee_name", "consignee_address",
@@ -882,7 +885,8 @@ git commit -m "feat(invoices): PDF rendering engine with Jinja + WeasyPrint + IN
       <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
-      <div>Mobile: {{ company.phones | join(', ') }}</div>
+      {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
+      {% if _mobiles %}<div>Mobile: {{ _mobiles | join(', ') }}</div>{% endif %}
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
     </td>
   </tr>
@@ -1080,7 +1084,8 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
       <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
-      <div>Mobile: {{ company.phones[0] }}</div>
+      {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
+      {% if _mobiles %}<div>Mobile: {{ _mobiles | join(', ') }}</div>{% endif %}
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
     </td>
   </tr>
@@ -1204,7 +1209,8 @@ git commit -m "feat(invoices): full Party Bill PDF template"
       <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
-      <div>Mobile: {{ company.phones[0] }}</div>
+      {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
+      {% if _mobiles %}<div>Mobile: {{ _mobiles | join(', ') }}</div>{% endif %}
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
     </td>
   </tr>
@@ -1459,6 +1465,8 @@ from backend.pdf.generator import render_pdf, render_all_zip
 class InvoiceIn(BaseModel):
     date: str
     vehicle_number: str
+    mobile1: str = ""
+    mobile2: str = ""
     from_location: str = ""
     to_location: str = ""
     consignor_name: str = ""
@@ -2009,6 +2017,7 @@ import { getInvoice, createInvoice, updateInvoice, nextSerial, invoicePdfUrl, in
 const EMPTY = {
   date: new Date().toISOString().slice(0, 10),
   vehicle_number: '',
+  mobile1: '', mobile2: '',
   from_location: '', to_location: '',
   consignor_name: '', consignor_address: '',
   consignee_name: '', consignee_address: '',
@@ -2178,6 +2187,18 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
               <Field label="Date" required><input type="date" value={form.date} onChange={set('date')} className={inputCls} /></Field>
               <Field label="Vehicle Number" required>
                 <input type="text" value={form.vehicle_number} onChange={set('vehicle_number')} placeholder="e.g. GJ01AB1234" className={inputCls + ' uppercase font-mono tracking-widest'} />
+              </Field>
+              <Field label="Mobile 1">
+                <input type="tel" inputMode="numeric" maxLength={10}
+                  value={form.mobile1}
+                  onChange={e => setVal('mobile1', e.target.value.replace(/\D/g,'').slice(0,10))}
+                  placeholder="10-digit number" className={inputCls} />
+              </Field>
+              <Field label="Mobile 2">
+                <input type="tel" inputMode="numeric" maxLength={10}
+                  value={form.mobile2}
+                  onChange={e => setVal('mobile2', e.target.value.replace(/\D/g,'').slice(0,10))}
+                  placeholder="10-digit number" className={inputCls} />
               </Field>
             </div>
           </Section>
