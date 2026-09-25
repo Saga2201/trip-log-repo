@@ -1,20 +1,21 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>LR {{ inv.serial_number }}</title>
 <style>
-  @page { size: A4 landscape; margin: 8mm 8mm; }
-  body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9pt; }
+  @page { size: A4 landscape; margin: 5mm 6mm; }
+  body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 8pt; line-height: 1.15; }
   .red { color: #d00; }
   .blue { color: #0044aa; }
   .u { text-decoration: underline; }
-  .box { border: 1px solid #111; padding: 4pt; }
-  .lbl { font-size: 7.5pt; color: #333; font-weight: 600; text-transform: uppercase; }
-  .val { font-weight: bold; font-size: 10pt; }
-  table.grid td, table.grid th { border: 1px solid #111; padding: 3pt 4pt; vertical-align: top; }
+  .box { border: 1px solid #111; padding: 3pt; }
+  .lbl { font-size: 7pt; color: #333; font-weight: 600; text-transform: uppercase; }
+  .val { font-weight: bold; font-size: 9pt; }
+  table.grid td, table.grid th { border: 1px solid #111; padding: 1.5pt 3pt; vertical-align: top; }
   table.grid { border-collapse: collapse; width: 100%; }
-  .section-hdr { background: #f5f5ff; color: #d00; font-weight: bold; text-align: center; padding: 2pt; }
-  .cell-hdr { color: #d00; font-weight: bold; font-size: 8pt; }
-  .small { font-size: 8pt; }
-  .tiny { font-size: 7pt; }
+  table.grid.compact td, table.grid.compact th { padding: 0.5pt 2pt; font-size: 7.5pt; line-height: 1.1; }
+  .section-hdr { background: #f5f5ff; color: #d00; font-weight: bold; text-align: center; padding: 1pt; }
+  .cell-hdr { color: #d00; font-weight: bold; font-size: 7.5pt; }
+  .small { font-size: 7.5pt; }
+  .tiny { font-size: 6.5pt; }
   .center { text-align: center; }
   .right { text-align: right; }
   .bold { font-weight: bold; }
@@ -23,14 +24,14 @@
 <body>
 
 <!-- Top strip: logo | jurisdiction/company/tagline | mobile/copy/pan/gstin -->
-<table style="width:100%;margin-bottom:4pt;">
+<table style="width:100%;margin-bottom:2pt;">
   <tr>
     <td style="width:15%;vertical-align:top;">
-      <img src="{{ company.logo_url }}" style="height:22mm;width:auto;" alt="{{ company.name }}" />
+      <img src="{{ company.logo_url }}" style="height:16mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td style="width:60%;text-align:center;vertical-align:top;">
       <div class="small u"><span class="bold">Subject To {{ company.jurisdiction | upper }}</span> jurisdiction</div>
-      <div class="red bold" style="font-size:16pt;">{{ company.name | upper }}</div>
+      <div class="red bold" style="font-size:13pt;">{{ company.name | upper }}</div>
       {% if company.tagline %}<div class="blue small bold">{{ company.tagline | upper }}</div>{% endif %}
       <div class="tiny bold" style="margin-top:2pt;">{{ company.address }}</div>
       <div class="tiny">
@@ -120,7 +121,7 @@
     <td class="val" style="width:28%;">{{ inv.consignor_name }}</td>
     <td class="small" style="width:6%;">NAME :</td>
     <td class="val" style="width:30%;">{{ inv.consignee_name }}</td>
-    <td class="val center" rowspan="3" style="vertical-align:middle;font-size:14pt;">{{ inv.lr_ref_invoice_no }}</td>
+    <td class="val center" rowspan="3" style="vertical-align:middle;font-size:11pt;">{{ inv.lr_ref_invoice_no }}</td>
     <td rowspan="3" style="vertical-align:top;padding:0;">
       <table style="width:100%;height:100%;">
         <tr><td class="small">DRIVER NAME :</td><td class="small bold">{{ inv.db_driver_name }}</td></tr>
@@ -167,7 +168,7 @@
 </table>
 
 <!-- Line items table + weight/rate/amount block -->
-<table class="grid" style="margin-bottom:0;border-top:none;">
+<table class="grid compact" style="margin-bottom:0;border-top:none;">
   <tr>
     <th style="width:8%;">PACKAGING<br/>TYPE</th>
     <th style="width:10%;">NUMBER OF ARTICLE</th>
@@ -218,12 +219,12 @@
     <td colspan="2" class="small">RECEIVER NUMBER : <span class="bold">{{ inv.lr_receiver_number }}</span></td>
     <td class="small bold">{{ inv.lr_receiver_remark }}</td>
     <td class="small bold">{{ inv.lr_receiver_status }}</td>
-    <td class="right small" style="padding-top:12pt;">________________<br/><span class="bold">RECEIVER SIGN</span></td>
+    <td class="right small" style="padding-top:8pt;">________________<br/><span class="bold">RECEIVER SIGN</span></td>
   </tr>
 </table>
 
 <!-- Bank details + Values + Remark + Branch address + Authorize sig -->
-<table style="width:100%;margin-top:4pt;">
+<table style="width:100%;margin-top:2pt;">
   <tr>
     <td style="width:70%;vertical-align:top;">
       <table class="grid" style="width:100%;">
@@ -260,7 +261,7 @@
     </td>
     <td style="width:30%;vertical-align:bottom;text-align:center;">
       <div class="bold small">FOR, {{ company.name | upper }}</div>
-      <div style="height:20mm;"></div>
+      <div style="height:10mm;"></div>
       <div class="bold small red">AUTHORIZE SIGNATURE</div>
     </td>
   </tr>
