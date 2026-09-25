@@ -50,11 +50,6 @@ def _minimal():
         "db_collection": 0.0,
         "db_previous_balance": 0.0,
         "db_advance_deposited": 0.0,
-        "db_expense_office": 670.0,
-        "db_expense_collection_ac": 250.0,
-        "db_expense_loan": 220.0,
-        "db_expense_godown_crane": 0.0,
-        "db_expense_st_charge": 50.0,
     }
 
 
@@ -80,8 +75,6 @@ def test_computed_fields_on_read():
     assert row["lr_final_total"] == 24000.0              # tax=ch=adv=0
     assert row["pb_amount_total"] == 24000.0             # 24000+0+0
     assert row["db_balance_fare"] == 12000.0             # 24000-12000
-    assert row["db_expense_total"] == 670 + 250 + 220 + 0 + 50
-    assert row["db_savings"] == row["db_balance_fare"] - row["db_expense_total"]
 
 
 def test_update_invoice_persists_changes():
@@ -100,42 +93,19 @@ def test_delete_invoice_removes_row():
     assert database.get_all_invoices() == []
 
 
-def test_financial_year_boundary():
-    assert database._financial_year("2026-04-01") == "26-27"
-    assert database._financial_year("2026-03-31") == "25-26"
-    assert database._financial_year("2026-09-25") == "26-27"
-    assert database._financial_year("2026-01-15") == "25-26"
-
-
-def test_serial_format_and_sequence_within_fy():
-    a_id, s1 = database.add_invoice({**_minimal(), "date": "2026-09-25"})
-    b_id, s2 = database.add_invoice({**_minimal(), "date": "2026-09-25"})
-    assert s1 == "JB/26-27/001"
-    assert s2 == "JB/26-27/002"
-
-
-def test_serial_resets_across_fy():
-    _, s_apr = database.add_invoice({**_minimal(), "date": "2026-04-05"})   # FY 26-27
-    _, s_mar = database.add_invoice({**_minimal(), "date": "2026-03-30"})   # FY 25-26
-    assert s_apr == "JB/26-27/001"
-    assert s_mar == "JB/25-26/001"
-
-
-def test_serial_zero_pads_to_three_then_grows():
-    # 1000 iterations would be slow; test the format function directly by
-    # driving the sequence table.
-    with database._get_conn() as conn:
-        conn.execute("INSERT INTO invoice_sequences (financial_year, last_seq) VALUES (?, ?)",
-                     ("25-26", 999))
-        conn.commit()
-    _, s = database.add_invoice({**_minimal(), "date": "2026-03-15"})
-    assert s == "JB/25-26/1000"
+def test_serial_starts_at_one_and_increments():
+    _, s1 = database.add_invoice({**_minimal(), "date": "2026-09-25"})
+    _, s2 = database.add_invoice({**_minimal(), "date": "2026-04-05"})
+    _, s3 = database.add_invoice({**_minimal(), "date": "2026-03-30"})
+    assert s1 == "1"
+    assert s2 == "2"
+    assert s3 == "3"  # date does not reset the counter — simple global increment
 
 
 def test_preview_does_not_reserve():
     p1 = database.preview_next_serial("2026-09-25")
     p2 = database.preview_next_serial("2026-09-25")
-    assert p1 == p2 == "JB/26-27/001"
+    assert p1 == p2 == "1"
     _, allocated = database.add_invoice({**_minimal(), "date": "2026-09-25"})
-    assert allocated == "JB/26-27/001"
-    assert database.preview_next_serial("2026-09-25") == "JB/26-27/002"
+    assert allocated == "1"
+    assert database.preview_next_serial("2026-09-25") == "2"

@@ -24,7 +24,7 @@ def _payload():
 def test_next_serial_endpoint(client):
     r = client.get("/invoices/next-serial", params={"date": "2026-09-25"})
     assert r.status_code == 200
-    assert r.json() == {"serial": "JB/26-27/001"}
+    assert r.json() == {"serial": "1"}
 
 
 def test_create_and_list(client):
@@ -32,13 +32,13 @@ def test_create_and_list(client):
     assert r.status_code == 201
     body = r.json()
     assert body["id"] == 1
-    assert body["serial_number"] == "JB/26-27/001"
+    assert body["serial_number"] == "1"
 
     r = client.get("/invoices")
     assert r.status_code == 200
     invoices = r.json()
     assert len(invoices) == 1
-    assert invoices[0]["serial_number"] == "JB/26-27/001"
+    assert invoices[0]["serial_number"] == "1"
     assert invoices[0]["lr_freight_total"] == 24000.0  # enrichment
 
 

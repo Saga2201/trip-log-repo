@@ -98,11 +98,6 @@ def init_db():
                 db_collection REAL DEFAULT 0,
                 db_previous_balance REAL DEFAULT 0,
                 db_advance_deposited REAL DEFAULT 0,
-                db_expense_office REAL DEFAULT 0,
-                db_expense_collection_ac REAL DEFAULT 0,
-                db_expense_loan REAL DEFAULT 0,
-                db_expense_godown_crane REAL DEFAULT 0,
-                db_expense_st_charge REAL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -228,8 +223,6 @@ _INVOICE_COLS = [
     "db_driver_name", "db_driver_address", "db_owner_phone", "db_transport_party",
     "db_fare", "db_advance", "db_collection",
     "db_previous_balance", "db_advance_deposited",
-    "db_expense_office", "db_expense_collection_ac", "db_expense_loan",
-    "db_expense_godown_crane", "db_expense_st_charge",
 ]
 
 _NUMERIC_COLS = {
@@ -240,8 +233,6 @@ _NUMERIC_COLS = {
     "pb_freight", "pb_hamali", "pb_halting",
     "db_fare", "db_advance", "db_collection",
     "db_previous_balance", "db_advance_deposited",
-    "db_expense_office", "db_expense_collection_ac", "db_expense_loan",
-    "db_expense_godown_crane", "db_expense_st_charge",
 }
 
 
@@ -251,56 +242,36 @@ def _enrich_invoice(row: dict) -> dict:
     lr_final = lr_freight + (row.get("lr_service_tax") or 0) + (row.get("lr_st_charge") or 0) - (row.get("lr_less_advance") or 0)
     pb_total = (row.get("pb_freight") or 0) + (row.get("pb_hamali") or 0) + (row.get("pb_halting") or 0)
     db_balance = (row.get("db_fare") or 0) - (row.get("db_advance") or 0)
-    db_expense_total = sum([
-        row.get("db_expense_office") or 0,
-        row.get("db_expense_collection_ac") or 0,
-        row.get("db_expense_loan") or 0,
-        row.get("db_expense_godown_crane") or 0,
-        row.get("db_expense_st_charge") or 0,
-    ])
-    db_savings = db_balance - db_expense_total
     return {
         **row,
         "lr_freight_total": lr_freight,
         "lr_final_total": lr_final,
         "pb_amount_total": pb_total,
         "db_balance_fare": db_balance,
-        "db_expense_total": db_expense_total,
-        "db_savings": db_savings,
     }
 
 
-def _financial_year(date_str: str) -> str:
-    """Return 'YY-YY' financial-year label for date_str (YYYY-MM-DD).
-    FY runs Apr 1 -> Mar 31."""
-    y, m, d = [int(p) for p in date_str.split("-")]
-    if m >= 4:
-        start = y
-    else:
-        start = y - 1
-    return f"{start % 100:02d}-{(start + 1) % 100:02d}"
+_GLOBAL_SEQ_KEY = "global"
 
 
 def _allocate_serial(conn, date_str: str) -> str:
-    """Allocate and reserve the next serial for the FY of date_str.
-    Called from within a transaction. Format: JB/YY-YY/NNN (grows past 3 digits if seq >= 1000)."""
-    fy = _financial_year(date_str)
-    # Upsert + read in same transaction. sqlite3 module opens BEGIN implicitly.
+    """Allocate and reserve the next simple auto-incrementing serial.
+    Returns str(n) starting at "1" and incrementing forever.
+    Called from within a transaction; sqlite3 opens BEGIN implicitly."""
     conn.execute(
         "INSERT INTO invoice_sequences (financial_year, last_seq) VALUES (?, 0) "
         "ON CONFLICT(financial_year) DO NOTHING",
-        (fy,),
+        (_GLOBAL_SEQ_KEY,),
     )
     conn.execute(
         "UPDATE invoice_sequences SET last_seq = last_seq + 1 WHERE financial_year = ?",
-        (fy,),
+        (_GLOBAL_SEQ_KEY,),
     )
     row = conn.execute(
         "SELECT last_seq FROM invoice_sequences WHERE financial_year = ?",
-        (fy,),
+        (_GLOBAL_SEQ_KEY,),
     ).fetchone()
-    seq = row[0]
-    return f"JB/{fy}/{seq:03d}"
+    return str(row[0])
 
 
 def add_invoice(data: dict) -> Tuple[int, str]:
@@ -348,12 +319,12 @@ def delete_invoice(invoice_id: int) -> None:
 
 
 def preview_next_serial(date_str: str) -> str:
-    """Peek what the NEXT allocation for date_str would be, without reserving."""
-    fy = _financial_year(date_str)
+    """Peek what the NEXT serial would be, without reserving. date_str is ignored
+    (kept in the signature for API compatibility with the old FY-scoped version)."""
     with _get_conn() as conn:
         row = conn.execute(
             "SELECT last_seq FROM invoice_sequences WHERE financial_year = ?",
-            (fy,),
+            (_GLOBAL_SEQ_KEY,),
         ).fetchone()
         next_seq = (row[0] if row else 0) + 1
-    return f"JB/{fy}/{next_seq:03d}"
+    return str(next_seq)

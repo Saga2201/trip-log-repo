@@ -370,11 +370,6 @@ class InvoiceIn(BaseModel):
     db_collection: float = 0.0
     db_previous_balance: float = 0.0
     db_advance_deposited: float = 0.0
-    db_expense_office: float = 0.0
-    db_expense_collection_ac: float = 0.0
-    db_expense_loan: float = 0.0
-    db_expense_godown_crane: float = 0.0
-    db_expense_st_charge: float = 0.0
 
 
 def _invoice_or_404(inv_id: int) -> dict:

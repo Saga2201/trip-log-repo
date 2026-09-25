@@ -37,8 +37,7 @@
       <div style="display:flex;justify-content:space-between;"><span>Total Advance:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
       <div style="display:flex;justify-content:space-between;"><span>Previous Balance:</span><span class="bold">{{ inv.db_previous_balance | format_inr if inv.db_previous_balance else '—' }}</span></div>
       <div style="display:flex;justify-content:space-between;"><span>Advance Total:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Total Expense:</span><span class="bold">{{ inv.db_expense_total | format_inr }}</span></div>
-      <div style="display:flex;justify-content:space-between;" class="bold"><span>Savings:</span><span>{{ inv.db_savings | format_inr }}</span></div>
+      <div style="display:flex;justify-content:space-between;" class="bold"><span>Balance Fare:</span><span>{{ inv.db_balance_fare | format_inr }}</span></div>
       <div style="display:flex;justify-content:space-between;"><span>Advance Deposited:</span><span>{{ inv.db_advance_deposited | format_inr if inv.db_advance_deposited else '—' }}</span></div>
     </td>
   </tr>
@@ -48,7 +47,6 @@
   <thead>
     <tr>
       <th>Fare</th><th>Advance</th><th>Balance Fare</th><th>Collection</th>
-      <th>Office Expense</th><th>Amount</th>
     </tr>
   </thead>
   <tbody>
@@ -57,20 +55,6 @@
       <td class="right">{{ inv.db_advance | format_inr }}</td>
       <td class="right">{{ inv.db_balance_fare | format_inr }}</td>
       <td class="right">{{ inv.db_collection | format_inr if inv.db_collection else '—' }}</td>
-      <td>Office Expense</td>
-      <td class="right">{{ inv.db_expense_office | format_inr }}</td>
-    </tr>
-    <tr><td></td><td></td><td></td><td></td><td>Collection A/C</td><td class="right">{{ inv.db_expense_collection_ac | format_inr }}</td></tr>
-    <tr><td></td><td></td><td></td><td></td><td>Loan</td><td class="right">{{ inv.db_expense_loan | format_inr }}</td></tr>
-    <tr><td></td><td></td><td></td><td></td><td>Godown Crane</td><td class="right">{{ inv.db_expense_godown_crane | format_inr if inv.db_expense_godown_crane else '—' }}</td></tr>
-    <tr><td></td><td></td><td></td><td></td><td>Dala / Munshiyana / ST Charge</td><td class="right">{{ inv.db_expense_st_charge | format_inr }}</td></tr>
-    <tr class="bold">
-      <td class="right">{{ inv.db_fare | format_inr }}</td>
-      <td class="right">{{ inv.db_advance | format_inr }}</td>
-      <td class="right">{{ inv.db_balance_fare | format_inr }}</td>
-      <td class="right">{{ inv.db_collection | format_inr if inv.db_collection else '—' }}</td>
-      <td class="right">Total</td>
-      <td class="right">{{ inv.db_expense_total | format_inr }}</td>
     </tr>
   </tbody>
 </table>

@@ -12,7 +12,7 @@
 
 - Spec source of truth: `docs/superpowers/specs/2026-09-25-invoices-design.md`. Every task's behavior implicitly matches the spec.
 - Invoices are **standalone** — no `trip_id` column, no linkage to the `trips` table.
-- Serial format: `JB/YY-YY/NNN`, zero-padded to 3 digits, per-FY (Apr–Mar). Immutable after allocation.
+- Serial format: simple auto-increment starting at `"1"` and growing by 1 per allocation (`"2"`, `"3"`, …). Stored as a string. Immutable after allocation. No FY prefix.
 - All bill labels/text on PDFs are **English only**.
 - Every PDF template reserves a `~60×60 px` `qr-slot` div in the header. No live QR encoding this iteration.
 - Company constants (name, address, phones, GST) come from `backend/pdf/company.py`, never from the DB.
@@ -169,7 +169,7 @@ git commit -m "feat(invoices): add PDF dependencies and pdf module skeleton"
   - `database.get_invoice_by_id(invoice_id: int) -> Optional[dict]`
   - `database.update_invoice(invoice_id: int, data: dict) -> None`
   - `database.delete_invoice(invoice_id: int) -> None`
-  - Every returned dict includes all columns + computed fields: `lr_freight_total`, `lr_final_total`, `pb_amount_total`, `db_balance_fare`, `db_expense_total`, `db_savings` (Python-computed inside CRUD, not stored triggers).
+  - Every returned dict includes all columns + computed fields: `lr_freight_total`, `lr_final_total`, `pb_amount_total`, `db_balance_fare` (Python-computed inside CRUD, not stored triggers).
 
 - [ ] **Step 1: Write failing test for `add_invoice` + `get_all_invoices`**
 
@@ -228,11 +228,6 @@ def _minimal():
         "db_collection": 0.0,
         "db_previous_balance": 0.0,
         "db_advance_deposited": 0.0,
-        "db_expense_office": 670.0,
-        "db_expense_collection_ac": 250.0,
-        "db_expense_loan": 220.0,
-        "db_expense_godown_crane": 0.0,
-        "db_expense_st_charge": 50.0,
     }
 
 
@@ -304,11 +299,6 @@ Open `database.py`. Inside `init_db()`, after the existing `trips` migrations bl
                 db_collection REAL DEFAULT 0,
                 db_previous_balance REAL DEFAULT 0,
                 db_advance_deposited REAL DEFAULT 0,
-                db_expense_office REAL DEFAULT 0,
-                db_expense_collection_ac REAL DEFAULT 0,
-                db_expense_loan REAL DEFAULT 0,
-                db_expense_godown_crane REAL DEFAULT 0,
-                db_expense_st_charge REAL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -349,8 +339,6 @@ _INVOICE_COLS = [
     "db_driver_name", "db_driver_address", "db_owner_phone", "db_transport_party",
     "db_fare", "db_advance", "db_collection",
     "db_previous_balance", "db_advance_deposited",
-    "db_expense_office", "db_expense_collection_ac", "db_expense_loan",
-    "db_expense_godown_crane", "db_expense_st_charge",
 ]
 
 _NUMERIC_COLS = {
@@ -361,8 +349,6 @@ _NUMERIC_COLS = {
     "pb_freight", "pb_hamali", "pb_halting",
     "db_fare", "db_advance", "db_collection",
     "db_previous_balance", "db_advance_deposited",
-    "db_expense_office", "db_expense_collection_ac", "db_expense_loan",
-    "db_expense_godown_crane", "db_expense_st_charge",
 }
 
 
@@ -372,22 +358,12 @@ def _enrich_invoice(row: dict) -> dict:
     lr_final = lr_freight + (row.get("lr_service_tax") or 0) + (row.get("lr_st_charge") or 0) - (row.get("lr_less_advance") or 0)
     pb_total = (row.get("pb_freight") or 0) + (row.get("pb_hamali") or 0) + (row.get("pb_halting") or 0)
     db_balance = (row.get("db_fare") or 0) - (row.get("db_advance") or 0)
-    db_expense_total = sum([
-        row.get("db_expense_office") or 0,
-        row.get("db_expense_collection_ac") or 0,
-        row.get("db_expense_loan") or 0,
-        row.get("db_expense_godown_crane") or 0,
-        row.get("db_expense_st_charge") or 0,
-    ])
-    db_savings = db_balance - db_expense_total
     return {
         **row,
         "lr_freight_total": lr_freight,
         "lr_final_total": lr_final,
         "pb_amount_total": pb_total,
         "db_balance_fare": db_balance,
-        "db_expense_total": db_expense_total,
-        "db_savings": db_savings,
     }
 
 
@@ -461,8 +437,6 @@ def test_computed_fields_on_read():
     assert row["lr_final_total"] == 24000.0              # tax=ch=adv=0
     assert row["pb_amount_total"] == 24000.0             # 24000+0+0
     assert row["db_balance_fare"] == 12000.0             # 24000-12000
-    assert row["db_expense_total"] == 670 + 250 + 220 + 0 + 50
-    assert row["db_savings"] == row["db_balance_fare"] - row["db_expense_total"]
 
 
 def test_update_invoice_persists_changes():
@@ -1238,8 +1212,7 @@ git commit -m "feat(invoices): full Party Bill PDF template"
       <div style="display:flex;justify-content:space-between;"><span>Total Advance:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
       <div style="display:flex;justify-content:space-between;"><span>Previous Balance:</span><span class="bold">{{ inv.db_previous_balance | format_inr if inv.db_previous_balance else '—' }}</span></div>
       <div style="display:flex;justify-content:space-between;"><span>Advance Total:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Total Expense:</span><span class="bold">{{ inv.db_expense_total | format_inr }}</span></div>
-      <div style="display:flex;justify-content:space-between;" class="bold"><span>Savings:</span><span>{{ inv.db_savings | format_inr }}</span></div>
+      <div style="display:flex;justify-content:space-between;" class="bold"><span>Balance Fare:</span><span>{{ inv.db_balance_fare | format_inr }}</span></div>
       <div style="display:flex;justify-content:space-between;"><span>Advance Deposited:</span><span>{{ inv.db_advance_deposited | format_inr if inv.db_advance_deposited else '—' }}</span></div>
     </td>
   </tr>
@@ -1249,7 +1222,6 @@ git commit -m "feat(invoices): full Party Bill PDF template"
   <thead>
     <tr>
       <th>Fare</th><th>Advance</th><th>Balance Fare</th><th>Collection</th>
-      <th>Office Expense</th><th>Amount</th>
     </tr>
   </thead>
   <tbody>
@@ -1258,20 +1230,6 @@ git commit -m "feat(invoices): full Party Bill PDF template"
       <td class="right">{{ inv.db_advance | format_inr }}</td>
       <td class="right">{{ inv.db_balance_fare | format_inr }}</td>
       <td class="right">{{ inv.db_collection | format_inr if inv.db_collection else '—' }}</td>
-      <td>Office Expense</td>
-      <td class="right">{{ inv.db_expense_office | format_inr }}</td>
-    </tr>
-    <tr><td></td><td></td><td></td><td></td><td>Collection A/C</td><td class="right">{{ inv.db_expense_collection_ac | format_inr }}</td></tr>
-    <tr><td></td><td></td><td></td><td></td><td>Loan</td><td class="right">{{ inv.db_expense_loan | format_inr }}</td></tr>
-    <tr><td></td><td></td><td></td><td></td><td>Godown Crane</td><td class="right">{{ inv.db_expense_godown_crane | format_inr if inv.db_expense_godown_crane else '—' }}</td></tr>
-    <tr><td></td><td></td><td></td><td></td><td>Dala / Munshiyana / ST Charge</td><td class="right">{{ inv.db_expense_st_charge | format_inr }}</td></tr>
-    <tr class="bold">
-      <td class="right">{{ inv.db_fare | format_inr }}</td>
-      <td class="right">{{ inv.db_advance | format_inr }}</td>
-      <td class="right">{{ inv.db_balance_fare | format_inr }}</td>
-      <td class="right">{{ inv.db_collection | format_inr if inv.db_collection else '—' }}</td>
-      <td class="right">Total</td>
-      <td class="right">{{ inv.db_expense_total | format_inr }}</td>
     </tr>
   </tbody>
 </table>
@@ -1505,11 +1463,6 @@ class InvoiceIn(BaseModel):
     db_collection: float = 0.0
     db_previous_balance: float = 0.0
     db_advance_deposited: float = 0.0
-    db_expense_office: float = 0.0
-    db_expense_collection_ac: float = 0.0
-    db_expense_loan: float = 0.0
-    db_expense_godown_crane: float = 0.0
-    db_expense_st_charge: float = 0.0
 
 
 def _invoice_or_404(inv_id: int) -> dict:
@@ -2036,8 +1989,6 @@ const EMPTY = {
   db_transport_party: '',
   db_fare: '', db_advance: '', db_collection: '',
   db_previous_balance: '', db_advance_deposited: '',
-  db_expense_office: '', db_expense_collection_ac: '', db_expense_loan: '',
-  db_expense_godown_crane: '', db_expense_st_charge: '',
 }
 
 const NUMERIC = new Set([
@@ -2045,8 +1996,6 @@ const NUMERIC = new Set([
   'lr_service_tax','lr_st_charge','lr_less_advance','lr_insurance_amount','lr_ref_value',
   'pb_freight','pb_hamali','pb_halting',
   'db_fare','db_advance','db_collection','db_previous_balance','db_advance_deposited',
-  'db_expense_office','db_expense_collection_ac','db_expense_loan',
-  'db_expense_godown_crane','db_expense_st_charge',
 ])
 
 const inputCls = 'w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-navy focus:border-transparent'
@@ -2126,9 +2075,6 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
   useEffect(() => { if (!invoiceId) mirrorSet('db_fare',    String(lrFreight || '')) }, [lrFreight])
   const pbTotal   = useMemo(() => (parseFloat(form.pb_freight) || 0) + (parseFloat(form.pb_hamali) || 0) + (parseFloat(form.pb_halting) || 0), [form.pb_freight, form.pb_hamali, form.pb_halting])
   const dbBalance = useMemo(() => (parseFloat(form.db_fare) || 0) - (parseFloat(form.db_advance) || 0), [form.db_fare, form.db_advance])
-  const dbExpense = useMemo(() => ['db_expense_office','db_expense_collection_ac','db_expense_loan','db_expense_godown_crane','db_expense_st_charge']
-    .reduce((s, k) => s + (parseFloat(form[k]) || 0), 0), [form])
-  const dbSavings = dbBalance - dbExpense
 
   const set = (key) => (e) => {
     setDirty(d => { const nd = new Set(d); nd.add(key); return nd })
@@ -2294,21 +2240,6 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
               <Field label="Previous Balance"><input type="number" min="0" value={form.db_previous_balance} onChange={set('db_previous_balance')} className={inputCls} /></Field>
               <Field label="Advance Deposited"><input type="number" min="0" value={form.db_advance_deposited} onChange={set('db_advance_deposited')} className={inputCls} /></Field>
               <Field label="Collection (Vasuli)"><input type="number" min="0" value={form.db_collection} onChange={set('db_collection')} className={inputCls} /></Field>
-            </div>
-            <div className="border-t border-yellow-200 pt-4">
-              <div className="text-xs font-bold text-navy mb-2">EXPENSES</div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
-                <Field label="Office Expense"><input type="number" min="0" value={form.db_expense_office} onChange={set('db_expense_office')} className={inputCls} /></Field>
-                <Field label="Collection A/C"><input type="number" min="0" value={form.db_expense_collection_ac} onChange={set('db_expense_collection_ac')} className={inputCls} /></Field>
-                <Field label="Loan"><input type="number" min="0" value={form.db_expense_loan} onChange={set('db_expense_loan')} className={inputCls} /></Field>
-                <Field label="Godown Crane"><input type="number" min="0" value={form.db_expense_godown_crane} onChange={set('db_expense_godown_crane')} className={inputCls} /></Field>
-                <Field label="Dala / Munshiyana / ST Charge"><input type="number" min="0" value={form.db_expense_st_charge} onChange={set('db_expense_st_charge')} className={inputCls} /></Field>
-                <Field label="Total Expense"><div className={roCls}>₹{dbExpense.toLocaleString('en-IN')}</div></Field>
-              </div>
-            </div>
-            <div className="bg-white rounded-lg p-3 border border-yellow-300 flex justify-between text-sm">
-              <span className="font-semibold text-gray-700">Savings (Balance Fare − Total Expense)</span>
-              <span className="font-bold text-green-700 text-lg">₹{dbSavings.toLocaleString('en-IN')}</span>
             </div>
           </Section>
 
