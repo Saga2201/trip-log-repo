@@ -58,3 +58,21 @@ def test_render_all_zip_contains_three_pdfs():
     assert any(n.endswith("_lr.pdf") for n in names)
     assert any(n.endswith("_party_bill.pdf") for n in names)
     assert any(n.endswith("_driver_bill.pdf") for n in names)
+
+
+def _pdf_text(pdf_bytes: bytes) -> str:
+    """Extract text from PDF for content checks. Uses pdfminer via WeasyPrint's dep tree."""
+    from pdfminer.high_level import extract_text
+    import io
+    return extract_text(io.BytesIO(pdf_bytes))
+
+
+def test_lr_pdf_contains_key_fields():
+    inv = _seed_invoice()
+    text = _pdf_text(render_pdf("lr", inv))
+    assert inv["serial_number"] in text
+    assert inv["vehicle_number"] in text
+    assert "Coal King Biogene" in text
+    assert "Krishna Traders" in text
+    assert "24,000" in text  # freight total
+    assert "Ahmedabad Jurisdiction" in text

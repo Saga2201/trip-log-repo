@@ -1,1 +1,135 @@
-<!doctype html><html><body><h1>LR {{ inv.serial_number }}</h1></body></html>
+<!doctype html>
+<html><head><meta charset="utf-8"><title>LR {{ inv.serial_number }}</title></head>
+<body>
+
+<div class="center small">Subject To {{ company.jurisdiction }} Jurisdiction Only</div>
+
+<table style="margin-bottom:6px;">
+  <tr>
+    <td style="width:60%;vertical-align:middle;">
+      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+      <div class="small" style="margin-top:2px;">{{ company.address }}</div>
+    </td>
+    <td class="right small" style="vertical-align:top;">
+      <div>{{ company.contact_person }}</div>
+      <div>{{ company.phones | join(', ') }}</div>
+      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
+    </td>
+  </tr>
+</table>
+
+<table class="hair small" style="margin-bottom:6px;">
+  <tr>
+    <td style="width:25%;vertical-align:top;">
+      <div class="bold">CAUTION</div>
+      <div>The consignment will not be detained, diverted, re-routed without consignee Bank's written permission. Will be delivered at destination.</div>
+    </td>
+    <td style="width:25%;vertical-align:top;">
+      <div class="center bold">AT OWNER'S RISK</div>
+      <div class="bold">INSURANCE</div>
+      <div>The consignor has stated that:</div>
+      <div>{{ '☑' if inv.lr_insurance_risk == 'not_insured' else '☐' }} He has not insured that consignment</div>
+      <div>{{ '☑' if inv.lr_insurance_risk == 'insured' else '☐' }} He has insured the consignment</div>
+      <div>Company: {{ inv.lr_insurance_company or '________' }}</div>
+      <div>Policy No: {{ inv.lr_insurance_policy_no or '________' }} &nbsp; Date: {{ inv.lr_insurance_policy_date or '________' }}</div>
+      <div>Amount: {{ inv.lr_insurance_amount | format_inr }} &nbsp; Risk: {{ inv.lr_insurance_risk | replace('_',' ') | title }}</div>
+    </td>
+    <td style="width:25%;vertical-align:top;">
+      <div class="bold">SCHEDULE OF DEMURRAGE CHARGES</div>
+      <div>Demurrage is chargable after ___ days from today @ Rs. ___ per day per Qtl on Weight Charged.</div>
+    </td>
+    <td style="width:25%;vertical-align:top;">
+      <div>Truck No.: <span class="bold">{{ inv.vehicle_number }}</span></div>
+      <div class="center bold" style="margin-top:4px;">NOTICE</div>
+      <div style="font-size:8pt;">The Consignment covered by this Lorry Receipt shall be stored at destination under the control of the Transport Operator and shall be delivered to or to the order of the Consignee Bank whose name is mentioned in the Lorry Receipt.</div>
+    </td>
+  </tr>
+</table>
+
+<table class="hair" style="margin-bottom:6px;">
+  <tr>
+    <td style="width:33%;vertical-align:top;">
+      <div class="center bold">CONSIGNMENT NOTE</div>
+      <div class="center" style="font-size:18pt;font-weight:bold;">{{ inv.serial_number }}</div>
+    </td>
+    <td style="width:67%;vertical-align:top;">
+      <div>Address Of Delivery Office:</div>
+      <div class="bold">{{ inv.lr_delivery_office_address }}</div>
+    </td>
+  </tr>
+</table>
+
+<table class="hair" style="margin-bottom:6px;">
+  <tr>
+    <td style="width:60%;vertical-align:top;">
+      <div><span class="bold">CONSIGNOR'S:</span> {{ inv.consignor_name }}</div>
+      <div style="margin-left:70px;">{{ inv.consignor_address }}</div>
+      <div style="margin-top:6px;"><span class="bold">CONSIGNEE'S:</span> {{ inv.consignee_name }}</div>
+      <div style="margin-left:70px;">{{ inv.consignee_address }}</div>
+    </td>
+    <td style="width:40%;vertical-align:top;">
+      <div>Date: <span class="bold">{{ inv.date }}</span></div>
+      <div>From: <span class="bold">{{ inv.from_location }}</span></div>
+      <div>To: <span class="bold">{{ inv.to_location }}</span></div>
+    </td>
+  </tr>
+</table>
+
+<table class="hair" style="margin-bottom:6px;">
+  <thead>
+    <tr>
+      <th>Packages</th>
+      <th>Description ( Said to Contain )</th>
+      <th>Weight Nett</th>
+      <th>Weight Charged</th>
+      <th>Rate</th>
+      <th colspan="2">FREIGHT ACCOUNT PAY / PAID</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">{{ inv.lr_packages }}</td>
+      <td>{{ inv.lr_description }}</td>
+      <td class="center">{{ inv.lr_weight_nett | format_inr }}</td>
+      <td class="center">{{ inv.lr_weight_charged | format_inr }}</td>
+      <td class="right">{{ inv.lr_rate }}</td>
+      <td class="right">{{ inv.lr_freight_total | format_inr }}</td>
+      <td class="right">00</td>
+    </tr>
+    <tr>
+      <td colspan="5" style="vertical-align:top;height:80pt;">
+        <div style="margin-top:4px;"><span class="bold">Service Tax Payable By:</span></div>
+        <div>
+          {{ '☑' if inv.lr_service_tax_payable_by == 'consignor' else '☐' }} Consignor
+          &nbsp;&nbsp; {{ '☑' if inv.lr_service_tax_payable_by == 'consignee' else '☐' }} Consignee
+          &nbsp;&nbsp; {{ '☑' if inv.lr_service_tax_payable_by == 'transporter' else '☐' }} Transporter
+        </div>
+        <div style="margin-top:12pt;font-style:italic;">Not responsible for any Breakage, Leakage, Damage, Bulates goods &amp; Fires</div>
+      </td>
+      <td colspan="2" style="padding:0;">
+        <table style="width:100%;font-size:11pt;">
+          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">S. Tax</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_service_tax | format_inr }}</td></tr>
+          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">St. Ch</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_st_charge | format_inr }}</td></tr>
+          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">Total</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_freight_total | format_inr }}</td></tr>
+          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">Less Adv.</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_less_advance | format_inr }}</td></tr>
+          <tr><td class="right bold" style="padding-right:4px;">Total</td><td class="right bold" style="padding-right:4px;border-left:1px solid #111;">{{ inv.lr_final_total | format_inr }}</td></tr>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<table style="margin-top:12pt;">
+  <tr>
+    <td style="width:60%;vertical-align:bottom;">
+      <div>Invoice No: <span class="bold">{{ inv.lr_ref_invoice_no }}</span></div>
+      <div>Value: <span class="bold">{{ inv.lr_ref_value | format_inr }}</span> &nbsp;&nbsp; G.S.T No: <span class="bold">{{ inv.lr_ref_gst_no }}</span></div>
+    </td>
+    <td style="width:40%;text-align:right;vertical-align:bottom;">
+      <div class="bold">For, {{ company.name }}</div>
+      <div style="margin-top:24pt;border-top:1px solid #111;padding-top:2pt;">Signature</div>
+    </td>
+  </tr>
+</table>
+
+</body></html>
