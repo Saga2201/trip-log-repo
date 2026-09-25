@@ -7,10 +7,18 @@ const EMPTY = {
   vehicle_number: '',
   mobile1: '', mobile2: '',
   from_location: '', to_location: '',
+  // Consignor + Consignee (extended for Sugam-style LR)
   consignor_name: '', consignor_address: '',
+  consignor_email: '', consignor_gstin: '', consignor_contact: '', consignor_bank_name: '',
   consignee_name: '', consignee_address: '',
-  lr_delivery_office_address: '',
-  lr_packages: '', lr_description: '',
+  consignee_email: '', consignee_gstin: '', consignee_contact: '', consignee_bank_name: '',
+  // LR header extras
+  lr_bilty_no: '', lr_vehicle_size: '', lr_seal_number: '',
+  lr_delivery_address: '', lr_delivery_office_address: '', lr_gate_pass_no: '',
+  lr_demurrage_after: '', lr_notice_text: '',
+  // LR line item
+  lr_packaging_type: '', lr_packages: '', lr_material_name: '',
+  lr_description: '', lr_hsn_code: '',
   lr_weight_nett: '', lr_weight_charged: '', lr_rate: '',
   lr_service_tax: '', lr_st_charge: '', lr_less_advance: '',
   lr_service_tax_payable_by: 'consignor',
@@ -18,9 +26,19 @@ const EMPTY = {
   lr_insurance_company: '', lr_insurance_policy_no: '',
   lr_insurance_policy_date: '', lr_insurance_amount: '',
   lr_ref_invoice_no: '', lr_ref_value: '', lr_ref_gst_no: '',
+  lr_bill_invoice_date: '', lr_eway_bill_no: '',
+  // LR charges
+  lr_halting_charge: '', lr_load_unload_charge: '', lr_bilty_charge: '',
+  lr_other_charge: '', lr_advance_amount: '',
+  // LR receiving + remark
+  lr_receiver_name: '', lr_receiver_number: '', lr_receiver_remark: '', lr_receiver_status: '',
+  lr_remark: '',
+  // Party Bill
   pb_bill_to_name: '', pb_bill_to_address: '',
   pb_freight: '', pb_hamali: '', pb_halting: '',
-  db_driver_name: '', db_driver_address: '', db_owner_phone: '',
+  // Driver Bill
+  db_driver_name: '', db_driver_address: '', db_driver_num: '',
+  db_driver_dl_number: '', db_owner_name: '', db_owner_phone: '',
   db_transport_party: '',
   db_fare: '', db_advance: '', db_collection: '',
   db_previous_balance: '', db_advance_deposited: '',
@@ -29,6 +47,7 @@ const EMPTY = {
 const NUMERIC = new Set([
   'lr_packages','lr_weight_nett','lr_weight_charged','lr_rate',
   'lr_service_tax','lr_st_charge','lr_less_advance','lr_insurance_amount','lr_ref_value',
+  'lr_halting_charge','lr_load_unload_charge','lr_bilty_charge','lr_other_charge','lr_advance_amount',
   'pb_freight','pb_hamali','pb_halting',
   'db_fare','db_advance','db_collection','db_previous_balance','db_advance_deposited',
 ])
@@ -110,6 +129,14 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
   useEffect(() => { if (!invoiceId) mirrorSet('db_fare',    String(lrFreight || '')) }, [lrFreight])
   const pbTotal   = useMemo(() => (parseFloat(form.pb_freight) || 0) + (parseFloat(form.pb_hamali) || 0) + (parseFloat(form.pb_halting) || 0), [form.pb_freight, form.pb_hamali, form.pb_halting])
   const dbBalance = useMemo(() => (parseFloat(form.db_fare) || 0) - (parseFloat(form.db_advance) || 0), [form.db_fare, form.db_advance])
+  const lrTotalAmount = useMemo(() =>
+    lrFreight
+    + (parseFloat(form.lr_halting_charge) || 0)
+    + (parseFloat(form.lr_load_unload_charge) || 0)
+    + (parseFloat(form.lr_bilty_charge) || 0)
+    + (parseFloat(form.lr_other_charge) || 0),
+    [lrFreight, form.lr_halting_charge, form.lr_load_unload_charge, form.lr_bilty_charge, form.lr_other_charge])
+  const lrBalanceAmount = lrTotalAmount - (parseFloat(form.lr_advance_amount) || 0)
 
   const set = (key) => (e) => {
     setDirty(d => { const nd = new Set(d); nd.add(key); return nd })
@@ -185,25 +212,75 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
           </Section>
 
           <Section icon={MapPin} title="Route & Parties" color="orange">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <Field label="From (Loading)"><input value={form.from_location} onChange={set('from_location')} className={inputCls} /></Field>
               <Field label="To (Unloading)"><input value={form.to_location} onChange={set('to_location')} className={inputCls} /></Field>
-              <Field label="Consignor Name"><input value={form.consignor_name} onChange={set('consignor_name')} className={inputCls} /></Field>
-              <Field label="Consignor Address"><input value={form.consignor_address} onChange={set('consignor_address')} className={inputCls} /></Field>
-              <Field label="Consignee Name"><input value={form.consignee_name} onChange={set('consignee_name')} className={inputCls} /></Field>
-              <Field label="Consignee Address"><input value={form.consignee_address} onChange={set('consignee_address')} className={inputCls} /></Field>
+            </div>
+            <div className="border-t border-orange-200 pt-4 mb-4">
+              <div className="text-xs font-bold text-navy mb-2">CONSIGNOR</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Name"><input value={form.consignor_name} onChange={set('consignor_name')} className={inputCls} /></Field>
+                <Field label="Address"><input value={form.consignor_address} onChange={set('consignor_address')} className={inputCls} /></Field>
+                <Field label="Email"><input type="email" value={form.consignor_email} onChange={set('consignor_email')} className={inputCls} /></Field>
+                <Field label="GSTIN"><input value={form.consignor_gstin} onChange={set('consignor_gstin')} className={inputCls + ' uppercase'} /></Field>
+                <Field label="Contact"><input value={form.consignor_contact} onChange={set('consignor_contact')} className={inputCls} /></Field>
+                <Field label="Bank Name"><input value={form.consignor_bank_name} onChange={set('consignor_bank_name')} className={inputCls} /></Field>
+              </div>
+            </div>
+            <div className="border-t border-orange-200 pt-4">
+              <div className="text-xs font-bold text-navy mb-2">CONSIGNEE / BUYER</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="Name"><input value={form.consignee_name} onChange={set('consignee_name')} className={inputCls} /></Field>
+                <Field label="Address"><input value={form.consignee_address} onChange={set('consignee_address')} className={inputCls} /></Field>
+                <Field label="Email"><input type="email" value={form.consignee_email} onChange={set('consignee_email')} className={inputCls} /></Field>
+                <Field label="GSTIN"><input value={form.consignee_gstin} onChange={set('consignee_gstin')} className={inputCls + ' uppercase'} /></Field>
+                <Field label="Contact"><input value={form.consignee_contact} onChange={set('consignee_contact')} className={inputCls} /></Field>
+                <Field label="Bank Name"><input value={form.consignee_bank_name} onChange={set('consignee_bank_name')} className={inputCls} /></Field>
+              </div>
             </div>
           </Section>
 
           <Section icon={Truck} title="LR Details" color="green">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div className="sm:col-span-2"><Field label="Delivery Office Address"><input value={form.lr_delivery_office_address} onChange={set('lr_delivery_office_address')} className={inputCls} /></Field></div>
-              <Field label="Packages"><input type="number" min="0" value={form.lr_packages} onChange={set('lr_packages')} className={inputCls} /></Field>
-              <Field label="Description (Said to Contain)"><input value={form.lr_description} onChange={set('lr_description')} className={inputCls} /></Field>
-              <Field label="Weight Nett (kg)"><input type="number" min="0" step="0.01" value={form.lr_weight_nett} onChange={set('lr_weight_nett')} className={inputCls} /></Field>
-              <Field label="Weight Charged (kg)"><input type="number" min="0" step="0.01" value={form.lr_weight_charged} onChange={set('lr_weight_charged')} className={inputCls} /></Field>
-              <Field label="Rate (₹/kg)"><input type="number" min="0" step="0.01" value={form.lr_rate} onChange={set('lr_rate')} className={inputCls} /></Field>
-              <Field label="Total Freight"><div className={roCls}>₹{lrFreight.toLocaleString('en-IN')}</div></Field>
+            <div className="mb-4">
+              <div className="text-xs font-bold text-navy mb-2">BILTY & VEHICLE</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Field label="Bilty No"><input value={form.lr_bilty_no} onChange={set('lr_bilty_no')} placeholder="defaults to serial" className={inputCls} /></Field>
+                <Field label="Vehicle Size"><input value={form.lr_vehicle_size} onChange={set('lr_vehicle_size')} className={inputCls} /></Field>
+                <Field label="Seal Number"><input value={form.lr_seal_number} onChange={set('lr_seal_number')} className={inputCls} /></Field>
+                <div className="sm:col-span-3"><Field label="Delivery Address"><input value={form.lr_delivery_address} onChange={set('lr_delivery_address')} className={inputCls} /></Field></div>
+                <div className="sm:col-span-3"><Field label="Delivery Office Address"><input value={form.lr_delivery_office_address} onChange={set('lr_delivery_office_address')} className={inputCls} /></Field></div>
+                <Field label="Gate Pass No"><input value={form.lr_gate_pass_no} onChange={set('lr_gate_pass_no')} className={inputCls} /></Field>
+                <Field label="Bill/Invoice Date"><input type="date" value={form.lr_bill_invoice_date} onChange={set('lr_bill_invoice_date')} className={inputCls} /></Field>
+                <Field label="E-Way Bill No"><input value={form.lr_eway_bill_no} onChange={set('lr_eway_bill_no')} className={inputCls} /></Field>
+                <Field label="Demurrage After"><input value={form.lr_demurrage_after} onChange={set('lr_demurrage_after')} placeholder="e.g. 3 days" className={inputCls} /></Field>
+                <div className="sm:col-span-3"><Field label="Notice Text (auto if blank)"><input value={form.lr_notice_text} onChange={set('lr_notice_text')} placeholder="Leave blank to use default" className={inputCls} /></Field></div>
+              </div>
+            </div>
+            <div className="border-t border-green-200 pt-4 mb-4">
+              <div className="text-xs font-bold text-navy mb-2">LINE ITEM</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Field label="Packaging Type"><input value={form.lr_packaging_type} onChange={set('lr_packaging_type')} className={inputCls} /></Field>
+                <Field label="Number of Articles"><input type="number" min="0" value={form.lr_packages} onChange={set('lr_packages')} className={inputCls} /></Field>
+                <Field label="Material Name"><input value={form.lr_material_name} onChange={set('lr_material_name')} className={inputCls} /></Field>
+                <div className="sm:col-span-2"><Field label="Description (Said to Contain)"><input value={form.lr_description} onChange={set('lr_description')} className={inputCls} /></Field></div>
+                <Field label="HSN Code"><input value={form.lr_hsn_code} onChange={set('lr_hsn_code')} className={inputCls} /></Field>
+                <Field label="Weight Actual (MT)"><input type="number" min="0" step="0.01" value={form.lr_weight_nett} onChange={set('lr_weight_nett')} className={inputCls} /></Field>
+                <Field label="Weight Guarantee (MT)"><input type="number" min="0" step="0.01" value={form.lr_weight_charged} onChange={set('lr_weight_charged')} className={inputCls} /></Field>
+                <Field label="Rate (₹/MT)"><input type="number" min="0" step="0.01" value={form.lr_rate} onChange={set('lr_rate')} className={inputCls} /></Field>
+                <Field label="Freight Amount"><div className={roCls}>₹{lrFreight.toLocaleString('en-IN')}</div></Field>
+              </div>
+            </div>
+            <div className="border-t border-green-200 pt-4 mb-4">
+              <div className="text-xs font-bold text-navy mb-2">CHARGES</div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Field label="Halting Charge (₹)"><input type="number" min="0" value={form.lr_halting_charge} onChange={set('lr_halting_charge')} className={inputCls} /></Field>
+                <Field label="Load/Unload Charge (₹)"><input type="number" min="0" value={form.lr_load_unload_charge} onChange={set('lr_load_unload_charge')} className={inputCls} /></Field>
+                <Field label="Bilty Charge (₹)"><input type="number" min="0" value={form.lr_bilty_charge} onChange={set('lr_bilty_charge')} className={inputCls} /></Field>
+                <Field label="Other Charge (₹)"><input type="number" min="0" value={form.lr_other_charge} onChange={set('lr_other_charge')} className={inputCls} /></Field>
+                <Field label="Total Amount"><div className={roCls}>₹{lrTotalAmount.toLocaleString('en-IN')}</div></Field>
+                <Field label="Advance Amount (₹)"><input type="number" min="0" value={form.lr_advance_amount} onChange={set('lr_advance_amount')} className={inputCls} /></Field>
+                <Field label="Balance Amount"><div className={roCls}>₹{lrBalanceAmount.toLocaleString('en-IN')}</div></Field>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <Field label="Service Tax (₹)"><input type="number" min="0" value={form.lr_service_tax} onChange={set('lr_service_tax')} className={inputCls} /></Field>
@@ -244,9 +321,21 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
               <div className="text-xs font-bold text-navy mb-2">REFERENCE (Consignor's own invoice)</div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label="Invoice No"><input value={form.lr_ref_invoice_no} onChange={set('lr_ref_invoice_no')} className={inputCls} /></Field>
-                <Field label="Value (₹)"><input type="number" min="0" value={form.lr_ref_value} onChange={set('lr_ref_value')} className={inputCls} /></Field>
-                <Field label="GST No"><input value={form.lr_ref_gst_no} onChange={set('lr_ref_gst_no')} className={inputCls} /></Field>
+                <Field label="Value of Goods (₹)"><input type="number" min="0" value={form.lr_ref_value} onChange={set('lr_ref_value')} className={inputCls} /></Field>
+                <Field label="GST No (Consignor)"><input value={form.lr_ref_gst_no} onChange={set('lr_ref_gst_no')} className={inputCls + ' uppercase'} /></Field>
               </div>
+            </div>
+            <div className="border-t border-green-200 pt-4 mt-4">
+              <div className="text-xs font-bold text-navy mb-2">RECEIVING</div>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <Field label="Receiver Name"><input value={form.lr_receiver_name} onChange={set('lr_receiver_name')} className={inputCls} /></Field>
+                <Field label="Receiver Number"><input value={form.lr_receiver_number} onChange={set('lr_receiver_number')} className={inputCls} /></Field>
+                <Field label="Remark"><input value={form.lr_receiver_remark} onChange={set('lr_receiver_remark')} className={inputCls} /></Field>
+                <Field label="Status"><input value={form.lr_receiver_status} onChange={set('lr_receiver_status')} className={inputCls} /></Field>
+              </div>
+            </div>
+            <div className="border-t border-green-200 pt-4 mt-4">
+              <Field label="Remark (footer)"><input value={form.lr_remark} onChange={set('lr_remark')} placeholder="Defaults to: Dala and Hamali charges will paid by party (Consignor/Consignee)" className={inputCls} /></Field>
             </div>
           </Section>
 
@@ -263,7 +352,10 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
 
           <Section icon={User} title="Driver Bill Details" color="yellow">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <Field label="Driver / Owner Name"><input value={form.db_driver_name} onChange={set('db_driver_name')} className={inputCls} /></Field>
+              <Field label="Driver Name"><input value={form.db_driver_name} onChange={set('db_driver_name')} className={inputCls} /></Field>
+              <Field label="Driver Number"><input type="tel" inputMode="numeric" maxLength={10} value={form.db_driver_num} onChange={e => setVal('db_driver_num', e.target.value.replace(/\D/g,'').slice(0,10))} className={inputCls} /></Field>
+              <Field label="DL Number"><input value={form.db_driver_dl_number} onChange={set('db_driver_dl_number')} className={inputCls + ' uppercase'} /></Field>
+              <Field label="Owner Name"><input value={form.db_owner_name} onChange={set('db_owner_name')} className={inputCls} /></Field>
               <Field label="Owner Phone"><input type="tel" inputMode="numeric" maxLength={10} value={form.db_owner_phone} onChange={e => setVal('db_owner_phone', e.target.value.replace(/\D/g,'').slice(0,10))} className={inputCls} /></Field>
               <div className="sm:col-span-2"><Field label="Driver Address"><input value={form.db_driver_address} onChange={set('db_driver_address')} className={inputCls} /></Field></div>
               <div className="sm:col-span-2"><Field label="Transport Party (broker/agent)"><input value={form.db_transport_party} onChange={set('db_transport_party')} className={inputCls} /></Field></div>
@@ -281,8 +373,13 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
           {savedId && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
               <div className="font-semibold text-green-800 mb-2">Invoice {savedSerial} saved. Download PDFs:</div>
+              <div className="text-xs text-green-700 mb-1">LR copies:</div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                <a href={invoicePdfUrl(savedId, 'lr') + '?copy=consignor'} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">LR — Consignor</a>
+                <a href={invoicePdfUrl(savedId, 'lr') + '?copy=consignee'} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">LR — Consignee</a>
+                <a href={invoicePdfUrl(savedId, 'lr') + '?copy=office'} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">LR — Office</a>
+              </div>
               <div className="flex flex-wrap gap-2">
-                <a href={invoicePdfUrl(savedId, 'lr')} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">LR</a>
                 <a href={invoicePdfUrl(savedId, 'party_bill')} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">Party Bill</a>
                 <a href={invoicePdfUrl(savedId, 'driver_bill')} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">Driver Bill</a>
                 <a href={invoiceAllPdfsUrl(savedId)} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-navy text-white text-sm hover:bg-navy-light font-semibold">All (ZIP)</a>
