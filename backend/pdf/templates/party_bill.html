@@ -1,1 +1,80 @@
-<!doctype html><html><body><h1>Party Bill {{ inv.serial_number }}</h1></body></html>
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Party Bill {{ inv.serial_number }}</title></head>
+<body>
+
+<div class="right small">Subject to {{ company.jurisdiction }} Jurisdiction</div>
+
+<table style="margin-bottom:4px;">
+  <tr>
+    <td style="width:60%;vertical-align:middle;">
+      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+    </td>
+    <td class="right small" style="vertical-align:top;">
+      <div>Mobile: {{ company.phones[0] }}</div>
+      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
+    </td>
+  </tr>
+</table>
+
+<table class="hair" style="margin-bottom:4px;">
+  <tr>
+    <td>Bill No: <span class="bold">{{ inv.serial_number }}</span></td>
+    <td>Date: <span class="bold">{{ inv.date }}</span></td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      To M/s: <span class="bold">{{ inv.pb_bill_to_name }}</span><br/>
+      Off: <span class="bold">{{ inv.pb_bill_to_address }}</span>
+    </td>
+  </tr>
+</table>
+
+<table class="hair">
+  <thead>
+    <tr>
+      <th>Billty No</th>
+      <th>Date</th>
+      <th>Particulars</th>
+      <th>Freight</th>
+      <th>Hamali</th>
+      <th>Halting</th>
+      <th colspan="2">Amount<br/><span class="small">Rs. &nbsp; Ps.</span></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="center">{{ inv.serial_number }}</td>
+      <td class="center">{{ inv.date }}</td>
+      <td>
+        Invoice No: {{ inv.lr_ref_invoice_no }}<br/>
+        Date: {{ inv.date }}<br/><br/>
+        We hereby Submit our bill for transportation of your goods.<br/><br/>
+        Vehicle: {{ inv.vehicle_number }}
+      </td>
+      <td class="right">{{ inv.pb_freight | format_inr }}</td>
+      <td class="right">{{ inv.pb_hamali | format_inr if inv.pb_hamali else '—' }}</td>
+      <td class="right">{{ inv.pb_halting | format_inr if inv.pb_halting else '—' }}</td>
+      <td class="right">{{ inv.pb_amount_total | format_inr }}</td>
+      <td class="right">00</td>
+    </tr>
+    <tr style="height:40pt;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    <tr style="height:40pt;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+
+<table style="margin-top:6pt;">
+  <tr>
+    <td style="width:50%;vertical-align:top;border:1px solid #111;padding:6pt;">
+      <div>GST No: <span class="bold">{{ company.gst }}</span></div>
+      <div style="margin-top:6pt;">Rs. (in words): <span style="font-style:italic;font-weight:bold;">{{ inv.pb_amount_total | inr_words }}</span></div>
+      <div style="margin-top:6pt;" class="small">After 30 days interest @ 18% annual will be on out standing bills.</div>
+      <div style="margin-top:12pt;">Checked By: ____________________</div>
+    </td>
+    <td style="width:50%;vertical-align:top;border:1px solid #111;padding:6pt;">
+      <div style="display:flex;justify-content:space-between;font-weight:bold;"><span>Total Rs.</span><span>{{ inv.pb_amount_total | format_inr }}</span></div>
+      <div class="right" style="margin-top:40pt;border-top:1px solid #111;padding-top:2pt;">For, {{ company.name }}</div>
+    </td>
+  </tr>
+</table>
+
+</body></html>

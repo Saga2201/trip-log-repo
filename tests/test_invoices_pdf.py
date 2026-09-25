@@ -77,3 +77,13 @@ def test_lr_pdf_contains_key_fields():
     assert "Krishna Traders" in text
     assert "24,000" in text  # freight total
     assert "Ahmedabad Jurisdiction" in text
+
+
+def test_party_bill_pdf_contains_key_fields():
+    inv = _seed_invoice()
+    text = _pdf_text(render_pdf("party_bill", inv))
+    assert inv["serial_number"] in text
+    assert "Coal King Biogene" in text
+    assert "24,000" in text                  # total
+    assert "Twenty-Four Thousand" in text    # amount in words
+    assert "24DKCPP6873H2ZS" in text         # GST from company
