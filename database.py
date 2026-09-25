@@ -262,9 +262,37 @@ def _enrich_invoice(row: dict) -> dict:
     }
 
 
+def _financial_year(date_str: str) -> str:
+    """Return 'YY-YY' financial-year label for date_str (YYYY-MM-DD).
+    FY runs Apr 1 -> Mar 31."""
+    y, m, d = [int(p) for p in date_str.split("-")]
+    if m >= 4:
+        start = y
+    else:
+        start = y - 1
+    return f"{start % 100:02d}-{(start + 1) % 100:02d}"
+
+
 def _allocate_serial(conn, date_str: str) -> str:
-    """STUB — replaced in Task 3 with real FY-scoped allocator."""
-    return "JB/00-00/000"
+    """Allocate and reserve the next serial for the FY of date_str.
+    Called from within a transaction. Format: JB/YY-YY/NNN (grows past 3 digits if seq >= 1000)."""
+    fy = _financial_year(date_str)
+    # Upsert + read in same transaction. sqlite3 module opens BEGIN implicitly.
+    conn.execute(
+        "INSERT INTO invoice_sequences (financial_year, last_seq) VALUES (?, 0) "
+        "ON CONFLICT(financial_year) DO NOTHING",
+        (fy,),
+    )
+    conn.execute(
+        "UPDATE invoice_sequences SET last_seq = last_seq + 1 WHERE financial_year = ?",
+        (fy,),
+    )
+    row = conn.execute(
+        "SELECT last_seq FROM invoice_sequences WHERE financial_year = ?",
+        (fy,),
+    ).fetchone()
+    seq = row[0]
+    return f"JB/{fy}/{seq:03d}"
 
 
 def add_invoice(data: dict) -> Tuple[int, str]:
@@ -309,3 +337,15 @@ def delete_invoice(invoice_id: int) -> None:
     with _get_conn() as conn:
         conn.execute("DELETE FROM invoices WHERE id = ?", (invoice_id,))
         conn.commit()
+
+
+def preview_next_serial(date_str: str) -> str:
+    """Peek what the NEXT allocation for date_str would be, without reserving."""
+    fy = _financial_year(date_str)
+    with _get_conn() as conn:
+        row = conn.execute(
+            "SELECT last_seq FROM invoice_sequences WHERE financial_year = ?",
+            (fy,),
+        ).fetchone()
+        next_seq = (row[0] if row else 0) + 1
+    return f"JB/{fy}/{next_seq:03d}"

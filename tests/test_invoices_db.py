@@ -98,3 +98,44 @@ def test_delete_invoice_removes_row():
     inv_id, _ = database.add_invoice(_minimal())
     database.delete_invoice(inv_id)
     assert database.get_all_invoices() == []
+
+
+def test_financial_year_boundary():
+    assert database._financial_year("2026-04-01") == "26-27"
+    assert database._financial_year("2026-03-31") == "25-26"
+    assert database._financial_year("2026-09-25") == "26-27"
+    assert database._financial_year("2026-01-15") == "25-26"
+
+
+def test_serial_format_and_sequence_within_fy():
+    a_id, s1 = database.add_invoice({**_minimal(), "date": "2026-09-25"})
+    b_id, s2 = database.add_invoice({**_minimal(), "date": "2026-09-25"})
+    assert s1 == "JB/26-27/001"
+    assert s2 == "JB/26-27/002"
+
+
+def test_serial_resets_across_fy():
+    _, s_apr = database.add_invoice({**_minimal(), "date": "2026-04-05"})   # FY 26-27
+    _, s_mar = database.add_invoice({**_minimal(), "date": "2026-03-30"})   # FY 25-26
+    assert s_apr == "JB/26-27/001"
+    assert s_mar == "JB/25-26/001"
+
+
+def test_serial_zero_pads_to_three_then_grows():
+    # 1000 iterations would be slow; test the format function directly by
+    # driving the sequence table.
+    with database._get_conn() as conn:
+        conn.execute("INSERT INTO invoice_sequences (financial_year, last_seq) VALUES (?, ?)",
+                     ("25-26", 999))
+        conn.commit()
+    _, s = database.add_invoice({**_minimal(), "date": "2026-03-15"})
+    assert s == "JB/25-26/1000"
+
+
+def test_preview_does_not_reserve():
+    p1 = database.preview_next_serial("2026-09-25")
+    p2 = database.preview_next_serial("2026-09-25")
+    assert p1 == p2 == "JB/26-27/001"
+    _, allocated = database.add_invoice({**_minimal(), "date": "2026-09-25"})
+    assert allocated == "JB/26-27/001"
+    assert database.preview_next_serial("2026-09-25") == "JB/26-27/002"
