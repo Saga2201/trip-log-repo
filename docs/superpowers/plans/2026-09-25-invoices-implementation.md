@@ -1073,7 +1073,7 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
 <html><head><meta charset="utf-8"><title>Party Bill {{ inv.serial_number }}</title></head>
 <body>
 
-<div class="right small">Subject to {{ company.jurisdiction }} Jurisdiction</div>
+<div class="center small">Subject to {{ company.jurisdiction }} Jurisdiction</div>
 
 <table style="margin-bottom:4px;">
   <tr>
