@@ -317,3 +317,129 @@ def export_trips():
 @app.get('/locations')
 def locations():
     return {'states': ALL_STATES, 'cities': STATES_CITIES}
+
+
+# ---------------------------------------------------------------------------
+# Invoices
+# ---------------------------------------------------------------------------
+from fastapi import Query
+from fastapi.responses import Response
+from backend.pdf.generator import render_pdf, render_all_zip
+
+
+class InvoiceIn(BaseModel):
+    date: str
+    vehicle_number: str
+    from_location: str = ""
+    to_location: str = ""
+    consignor_name: str = ""
+    consignor_address: str = ""
+    consignee_name: str = ""
+    consignee_address: str = ""
+    lr_delivery_office_address: str = ""
+    lr_packages: int = 0
+    lr_description: str = ""
+    lr_weight_nett: float = 0.0
+    lr_weight_charged: float = 0.0
+    lr_rate: float = 0.0
+    lr_service_tax: float = 0.0
+    lr_st_charge: float = 0.0
+    lr_less_advance: float = 0.0
+    lr_service_tax_payable_by: str = "consignor"
+    lr_insurance_risk: str = "not_insured"
+    lr_insurance_company: str = ""
+    lr_insurance_policy_no: str = ""
+    lr_insurance_policy_date: str = ""
+    lr_insurance_amount: float = 0.0
+    lr_ref_invoice_no: str = ""
+    lr_ref_value: float = 0.0
+    lr_ref_gst_no: str = ""
+    pb_bill_to_name: str = ""
+    pb_bill_to_address: str = ""
+    pb_freight: float = 0.0
+    pb_hamali: float = 0.0
+    pb_halting: float = 0.0
+    db_driver_name: str = ""
+    db_driver_address: str = ""
+    db_owner_phone: str = ""
+    db_transport_party: str = ""
+    db_fare: float = 0.0
+    db_advance: float = 0.0
+    db_collection: float = 0.0
+    db_previous_balance: float = 0.0
+    db_advance_deposited: float = 0.0
+    db_expense_office: float = 0.0
+    db_expense_collection_ac: float = 0.0
+    db_expense_loan: float = 0.0
+    db_expense_godown_crane: float = 0.0
+    db_expense_st_charge: float = 0.0
+
+
+def _invoice_or_404(inv_id: int) -> dict:
+    inv = database.get_invoice_by_id(inv_id)
+    if inv is None:
+        raise HTTPException(404, f"Invoice {inv_id} not found")
+    return inv
+
+
+@app.get("/invoices/next-serial")
+def next_serial(date: str = Query(...)):
+    return {"serial": database.preview_next_serial(date)}
+
+
+@app.get("/invoices")
+def list_invoices():
+    return database.get_all_invoices()
+
+
+@app.post("/invoices", status_code=201)
+def create_invoice(body: InvoiceIn):
+    inv_id, serial = database.add_invoice(body.dict())
+    return {"id": inv_id, "serial_number": serial}
+
+
+@app.get("/invoices/{inv_id}")
+def get_invoice(inv_id: int):
+    return _invoice_or_404(inv_id)
+
+
+@app.put("/invoices/{inv_id}")
+def update_invoice(inv_id: int, body: InvoiceIn):
+    _invoice_or_404(inv_id)
+    database.update_invoice(inv_id, body.dict())
+    return database.get_invoice_by_id(inv_id)
+
+
+@app.delete("/invoices/{inv_id}", status_code=204)
+def delete_invoice(inv_id: int):
+    _invoice_or_404(inv_id)
+    database.delete_invoice(inv_id)
+
+
+_VALID_KINDS = {"lr", "party_bill", "driver_bill"}
+
+
+@app.get("/invoices/{inv_id}/pdf/all")
+def invoice_pdf_all(inv_id: int):
+    inv = _invoice_or_404(inv_id)
+    blob = render_all_zip(inv)
+    filename = f"{inv['serial_number'].replace('/', '_')}_all.zip"
+    return Response(
+        blob,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.get("/invoices/{inv_id}/pdf/{kind}")
+def invoice_pdf(inv_id: int, kind: str):
+    if kind not in _VALID_KINDS:
+        raise HTTPException(400, "kind must be one of: lr, party_bill, driver_bill")
+    inv = _invoice_or_404(inv_id)
+    pdf_bytes = render_pdf(kind, inv)
+    filename = f"{inv['serial_number'].replace('/', '_')}_{kind}.pdf"
+    return Response(
+        pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
