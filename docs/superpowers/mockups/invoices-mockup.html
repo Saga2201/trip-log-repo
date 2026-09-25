@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JB Transport — Invoices Feature Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#1e3a5f',
+            'navy-dark': '#132a48',
+            'navy-light': '#2d5a8e',
+            page: '#f4f7fb',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', 'Segoe UI', sans-serif; background:#eef2f7; }
+    /* PDF page look */
+    .pdf-page {
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      margin: 24px auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 12mm 14mm;
+      font-family: 'Times New Roman', serif;
+      color: #111;
+      position: relative;
+    }
+    .pdf-page-driver { min-height: auto; }
+    .pdf-hair { border: 1px solid #111; }
+    .pdf-hair td, .pdf-hair th { border: 1px solid #111; padding: 4px 6px; font-size: 11px; }
+    .pdf-hair th { background: #f2f2f2; font-weight: 600; }
+    .field-line { border-bottom: 1px solid #444; display:inline-block; min-width: 120px; padding-bottom: 1px; }
+    .qr-slot {
+      width: 60px; height: 60px; border: 1px dashed #888; background: repeating-linear-gradient(45deg,#f6f6f6,#f6f6f6 4px,#eee 4px,#eee 8px);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 8px; color: #888;
+    }
+    .tab-btn { padding: 8px 14px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 13px; }
+    .tab-btn.active { background:#1e3a5f; color:#fff; }
+    .tab-btn:not(.active) { background:#e2e8f0; color:#334155; }
+    .tab-btn:not(.active):hover { background:#cbd5e1; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .fake-input { border:1px solid #d1d5db; background:#fff; border-radius:8px; padding:8px 12px; font-size:13px; color:#111; }
+    .fake-input.placeholder { color:#9ca3af; }
+    .section-hdr { font-size:11px; font-weight:700; color:#1e3a5f; letter-spacing:0.08em; text-transform:uppercase; padding-bottom:6px; border-bottom:1px solid #eef2f7; margin-bottom:14px; display:flex; align-items:center; gap:6px; }
+    .lbl { font-size:11px; font-weight:600; color:#4b5563; margin-bottom:4px; display:block; }
+    .req::after { content:' *'; color:#ef4444; }
+    .auto-tag { background:#dbeafe; color:#1e3a5f; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; letter-spacing:0.05em; }
+    .mirror-tag { background:#fef3c7; color:#92400e; font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-left:6px; letter-spacing:0.05em; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- Top nav for switching views -->
+<div class="sticky top-0 z-50 bg-white shadow-sm border-b border-slate-200">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-2">
+    <span class="text-lg font-bold text-navy mr-4">JB Transport · Invoices Mockup</span>
+    <button class="tab-btn active" data-view="list">Invoices List</button>
+    <button class="tab-btn" data-view="form">New Invoice Form</button>
+    <button class="tab-btn" data-view="lr">PDF: LR</button>
+    <button class="tab-btn" data-view="pb">PDF: Party Bill</button>
+    <button class="tab-btn" data-view="db">PDF: Driver Bill</button>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- VIEW 1: LIST PAGE (with sidebar) -->
+<!-- ============================================================ -->
+<section id="view-list" class="view active">
+  <div class="flex h-[calc(100vh-68px)] overflow-hidden bg-page">
+    <!-- Sidebar -->
+    <aside class="w-[220px] bg-navy min-h-full flex flex-col flex-shrink-0">
+      <div class="flex items-center gap-3 px-5 py-5 border-b border-navy-dark">
+        <span class="text-2xl">🚛</span>
+        <span class="text-white text-lg font-bold">JB Transport</span>
+      </div>
+      <nav class="flex flex-col mt-3 flex-1">
+        <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-blue-100 border-l-4 border-transparent">📋 All Trips</a>
+        <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-blue-100 border-l-4 border-transparent">➕ New Trip</a>
+        <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white bg-navy-light border-l-4 border-[#4fc3f7]">📄 Invoices</a>
+        <a class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-blue-100 border-l-4 border-transparent">📊 Insights</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 overflow-auto p-6">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">📄</span>
+          <h1 class="text-xl font-bold text-navy">Invoices</h1>
+        </div>
+        <button class="bg-navy text-white font-semibold px-5 py-2.5 rounded-lg text-sm flex items-center gap-2 hover:bg-navy-light">➕ New Invoice</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+        <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-[#1e3a5f]">
+          <div class="text-xs text-gray-500 font-semibold uppercase">Total Invoices</div>
+          <div class="text-2xl font-bold text-navy mt-1">24</div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-[#f57c00]">
+          <div class="text-xs text-gray-500 font-semibold uppercase">This Month</div>
+          <div class="text-2xl font-bold text-navy mt-1">7</div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-[#2e7d32]">
+          <div class="text-xs text-gray-500 font-semibold uppercase">Total Billed</div>
+          <div class="text-2xl font-bold text-navy mt-1">₹4,56,000</div>
+        </div>
+        <div class="bg-white rounded-xl p-4 shadow-sm border-l-4 border-[#7b1fa2]">
+          <div class="text-xs text-gray-500 font-semibold uppercase">FY Sequence</div>
+          <div class="text-2xl font-bold text-navy mt-1">JB/25-26/024</div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+          <input placeholder="Search serial, vehicle, party…" class="fake-input flex-1" />
+          <button class="fake-input">📅 Date range</button>
+        </div>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase">
+              <th class="text-left px-4 py-3">Serial #</th>
+              <th class="text-left px-4 py-3">Date</th>
+              <th class="text-left px-4 py-3">Vehicle</th>
+              <th class="text-left px-4 py-3">Consignor → Consignee</th>
+              <th class="text-left px-4 py-3">Route</th>
+              <th class="text-right px-4 py-3">Freight</th>
+              <th class="text-left px-4 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 3 sample rows -->
+            <tr class="border-b border-gray-100 hover:bg-blue-50">
+              <td class="px-4 py-3 font-bold text-navy">JB/25-26/024</td>
+              <td class="px-4 py-3 text-gray-700">2026-09-25</td>
+              <td class="px-4 py-3 font-mono font-bold text-navy">GJ01AB1234</td>
+              <td class="px-4 py-3 text-gray-700">Coal King Biogene Pvt Ltd → Krishna Complex</td>
+              <td class="px-4 py-3 text-gray-500">Ahmedabad → Sarkhej</td>
+              <td class="px-4 py-3 text-right font-semibold">₹24,000</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1">
+                  <button title="View" class="p-1.5 rounded hover:bg-blue-100 text-blue-600">👁️</button>
+                  <button title="Edit" class="p-1.5 rounded hover:bg-blue-100 text-blue-600">✏️</button>
+                  <button title="Download all 3 PDFs" class="p-1.5 rounded hover:bg-green-100 text-green-600">⬇️</button>
+                  <button title="Delete" class="p-1.5 rounded hover:bg-red-100 text-red-500">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="border-b border-gray-100 bg-gray-50/30 hover:bg-blue-50">
+              <td class="px-4 py-3 font-bold text-navy">JB/25-26/023</td>
+              <td class="px-4 py-3 text-gray-700">2026-09-22</td>
+              <td class="px-4 py-3 font-mono font-bold text-navy">UP33CT9204</td>
+              <td class="px-4 py-3 text-gray-700">Shri Meladi Mata → Tanwar Cargo</td>
+              <td class="px-4 py-3 text-gray-500">Ahmedabad → Delhi</td>
+              <td class="px-4 py-3 text-right font-semibold">₹1,34,000</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1">
+                  <button class="p-1.5 rounded hover:bg-blue-100 text-blue-600">👁️</button>
+                  <button class="p-1.5 rounded hover:bg-blue-100 text-blue-600">✏️</button>
+                  <button class="p-1.5 rounded hover:bg-green-100 text-green-600">⬇️</button>
+                  <button class="p-1.5 rounded hover:bg-red-100 text-red-500">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            <tr class="border-b border-gray-100 hover:bg-blue-50">
+              <td class="px-4 py-3 font-bold text-navy">JB/25-26/022</td>
+              <td class="px-4 py-3 text-gray-700">2026-09-18</td>
+              <td class="px-4 py-3 font-mono font-bold text-navy">MH12KD5567</td>
+              <td class="px-4 py-3 text-gray-700">ABC Industries → XYZ Traders</td>
+              <td class="px-4 py-3 text-gray-500">Mumbai → Pune</td>
+              <td class="px-4 py-3 text-right font-semibold">₹42,500</td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-1">
+                  <button class="p-1.5 rounded hover:bg-blue-100 text-blue-600">👁️</button>
+                  <button class="p-1.5 rounded hover:bg-blue-100 text-blue-600">✏️</button>
+                  <button class="p-1.5 rounded hover:bg-green-100 text-green-600">⬇️</button>
+                  <button class="p-1.5 rounded hover:bg-red-100 text-red-500">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- VIEW 2: NEW INVOICE FORM (modal) -->
+<!-- ============================================================ -->
+<section id="view-form" class="view">
+  <div class="max-w-3xl mx-auto my-6 bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <!-- Modal header -->
+    <div class="flex items-center justify-between px-6 py-4 bg-navy text-white">
+      <div class="flex items-center gap-3">
+        <span>📄</span>
+        <span class="text-base font-bold">New Invoice · <span class="opacity-80 text-sm font-normal">Serial will be JB/25-26/025</span></span>
+      </div>
+      <button class="hover:bg-white/20 rounded-lg p-1">✕</button>
+    </div>
+
+    <div class="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+
+      <!-- Section 1: Header / Common -->
+      <div class="bg-blue-50 rounded-xl p-5">
+        <div class="section-hdr">📋 Common Header</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label class="lbl">Serial #<span class="auto-tag">AUTO</span></label>
+            <div class="fake-input bg-gray-100 font-mono font-bold text-navy">JB/25-26/025</div>
+          </div>
+          <div>
+            <label class="lbl req">Date</label>
+            <div class="fake-input">2026-09-25</div>
+          </div>
+          <div>
+            <label class="lbl req">Vehicle Number</label>
+            <div class="fake-input font-mono tracking-widest uppercase">GJ01AB1234</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Route & Parties -->
+      <div class="bg-orange-50 rounded-xl p-5">
+        <div class="section-hdr">📍 Route &amp; Parties</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="lbl">From (Loading)</label>
+            <div class="fake-input">Ahmedabad</div>
+          </div>
+          <div>
+            <label class="lbl">To (Unloading)</label>
+            <div class="fake-input">Sarkhej</div>
+          </div>
+          <div>
+            <label class="lbl">Consignor Name</label>
+            <div class="fake-input">Coal King Biogene Pvt Ltd</div>
+          </div>
+          <div>
+            <label class="lbl">Consignor Address</label>
+            <div class="fake-input">12345 Krishna Complex, Sarkhej</div>
+          </div>
+          <div>
+            <label class="lbl">Consignee Name</label>
+            <div class="fake-input">M/s Krishna Traders</div>
+          </div>
+          <div>
+            <label class="lbl">Consignee Address</label>
+            <div class="fake-input">Sanand Road, Ahmedabad</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: LR Details -->
+      <div class="bg-green-50 rounded-xl p-5">
+        <div class="section-hdr">🚚 LR (Lorry Receipt) Details</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div class="sm:col-span-2">
+            <label class="lbl">Delivery Office Address</label>
+            <div class="fake-input">JB Transport Sarkhej Branch</div>
+          </div>
+          <div>
+            <label class="lbl">Packages</label>
+            <div class="fake-input">50</div>
+          </div>
+          <div>
+            <label class="lbl">Description (Said to Contain)</label>
+            <div class="fake-input">Cotton Bales</div>
+          </div>
+          <div>
+            <label class="lbl">Weight Nett (kg)</label>
+            <div class="fake-input">4500</div>
+          </div>
+          <div>
+            <label class="lbl">Weight Charged (kg)</label>
+            <div class="fake-input">5000</div>
+          </div>
+          <div>
+            <label class="lbl">Rate (₹/kg)</label>
+            <div class="fake-input">4.80</div>
+          </div>
+          <div>
+            <label class="lbl">Total Freight <span class="auto-tag">AUTO</span></label>
+            <div class="fake-input bg-gray-100 font-semibold">₹24,000</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label class="lbl">Service Tax (₹)</label>
+            <div class="fake-input">0</div>
+          </div>
+          <div>
+            <label class="lbl">St. Charge (₹)</label>
+            <div class="fake-input">0</div>
+          </div>
+          <div>
+            <label class="lbl">Less Advance (₹)</label>
+            <div class="fake-input">0</div>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="lbl">Service Tax Payable By</label>
+          <div class="flex gap-4 text-sm">
+            <label class="flex items-center gap-2"><input type="radio" name="stp" checked /> Consignor</label>
+            <label class="flex items-center gap-2"><input type="radio" name="stp" /> Consignee</label>
+            <label class="flex items-center gap-2"><input type="radio" name="stp" /> Transporter</label>
+          </div>
+        </div>
+        <div class="border-t border-green-200 pt-4">
+          <div class="text-xs font-bold text-navy mb-2">INSURANCE</div>
+          <div class="mb-3 flex gap-4 text-sm">
+            <label class="flex items-center gap-2"><input type="radio" name="risk" checked /> Not insured (Owner's risk)</label>
+            <label class="flex items-center gap-2"><input type="radio" name="risk" /> Insured</label>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div><label class="lbl">Company</label><div class="fake-input placeholder">—</div></div>
+            <div><label class="lbl">Policy No</label><div class="fake-input placeholder">—</div></div>
+            <div><label class="lbl">Policy Date</label><div class="fake-input placeholder">—</div></div>
+            <div><label class="lbl">Amount</label><div class="fake-input placeholder">—</div></div>
+          </div>
+        </div>
+        <div class="border-t border-green-200 pt-4 mt-4">
+          <div class="text-xs font-bold text-navy mb-2">REFERENCE (Consignor's own invoice, if any)</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div><label class="lbl">Invoice No</label><div class="fake-input">INV-2026-091</div></div>
+            <div><label class="lbl">Value (₹)</label><div class="fake-input">2,50,000</div></div>
+            <div><label class="lbl">GST No</label><div class="fake-input">24AABCC1234X1Z5</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Party Bill Details -->
+      <div class="bg-purple-50 rounded-xl p-5">
+        <div class="section-hdr">💰 Party Bill Details</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="lbl">Bill To Name <span class="mirror-tag">MIRRORS CONSIGNOR</span></label>
+            <div class="fake-input">Coal King Biogene Pvt Ltd</div>
+          </div>
+          <div>
+            <label class="lbl">Bill To Address <span class="mirror-tag">MIRRORS CONSIGNOR</span></label>
+            <div class="fake-input">12345 Krishna Complex, Sarkhej</div>
+          </div>
+          <div>
+            <label class="lbl">Freight (₹) <span class="mirror-tag">MIRRORS LR TOTAL</span></label>
+            <div class="fake-input">24,000</div>
+          </div>
+          <div>
+            <label class="lbl">Hamali (₹)</label>
+            <div class="fake-input">0</div>
+          </div>
+          <div>
+            <label class="lbl">Halting (₹)</label>
+            <div class="fake-input">0</div>
+          </div>
+          <div>
+            <label class="lbl">Total Amount <span class="auto-tag">AUTO</span></label>
+            <div class="fake-input bg-gray-100 font-semibold">₹24,000</div>
+          </div>
+        </div>
+        <p class="mt-3 text-xs text-purple-700">💡 Mirrored fields auto-copy from earlier sections but can be edited if this bill differs.</p>
+      </div>
+
+      <!-- Section 5: Driver Bill Details -->
+      <div class="bg-yellow-50 rounded-xl p-5">
+        <div class="section-hdr">🧾 Driver Bill Details</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div><label class="lbl">Driver / Owner Name</label><div class="fake-input">Rahish Singh</div></div>
+          <div><label class="lbl">Owner Phone</label><div class="fake-input">9935227951</div></div>
+          <div class="sm:col-span-2"><label class="lbl">Driver Address</label><div class="fake-input">Village Rampur, Dist Faizabad, UP</div></div>
+          <div class="sm:col-span-2"><label class="lbl">Transport Party (broker/agent)</label><div class="fake-input">Shri Meladi Mata A/C Tanwar Cargo</div></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div><label class="lbl">Fare (₹) <span class="mirror-tag">MIRRORS LR TOTAL</span></label><div class="fake-input">24,000</div></div>
+          <div><label class="lbl">Advance (₹)</label><div class="fake-input">12,000</div></div>
+          <div><label class="lbl">Balance Fare <span class="auto-tag">AUTO</span></label><div class="fake-input bg-gray-100 font-semibold">₹12,000</div></div>
+          <div><label class="lbl">Previous Balance</label><div class="fake-input">0</div></div>
+          <div><label class="lbl">Advance Deposited</label><div class="fake-input">0</div></div>
+          <div><label class="lbl">Collection (Vasuli)</label><div class="fake-input">0</div></div>
+        </div>
+
+        <div class="border-t border-yellow-200 pt-4">
+          <div class="text-xs font-bold text-navy mb-2">EXPENSES</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-3">
+            <div><label class="lbl">Office Expense</label><div class="fake-input">670</div></div>
+            <div><label class="lbl">Collection A/C</label><div class="fake-input">250</div></div>
+            <div><label class="lbl">Loan</label><div class="fake-input">220</div></div>
+            <div><label class="lbl">Godown Crane</label><div class="fake-input">0</div></div>
+            <div><label class="lbl">Dala / Munshiyana / ST Charge</label><div class="fake-input">50</div></div>
+            <div><label class="lbl">Total Expense <span class="auto-tag">AUTO</span></label><div class="fake-input bg-gray-100 font-semibold">₹1,190</div></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg p-3 border border-yellow-300 flex justify-between text-sm">
+          <span class="font-semibold text-gray-700">Savings <span class="auto-tag">AUTO</span> (Balance Fare − Total Expense)</span>
+          <span class="font-bold text-green-700 text-lg">₹10,810</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
+      <button class="px-5 py-2 rounded-lg text-sm font-medium text-gray-600 bg-white border border-gray-300 hover:bg-gray-100">Cancel</button>
+      <button class="px-6 py-2 rounded-lg text-sm font-bold text-white bg-navy hover:bg-navy-light">Save &amp; Generate All 3 PDFs</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- VIEW 3: LR PDF -->
+<!-- ============================================================ -->
+<section id="view-lr" class="view">
+  <div class="pdf-page text-[12px]">
+
+    <div class="text-center text-[11px] mb-1">Subject To Ahmedabad Jurisdiction Only</div>
+
+    <!-- Header row -->
+    <div class="flex items-start justify-between mb-2">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 bg-navy text-white flex items-center justify-center text-lg font-bold rounded">JB</div>
+        <div>
+          <div class="text-lg font-bold">JB TRANSPORTS</div>
+          <div class="text-[10px]">201, Shine Swasti, Nr. Godrej Garden City, Gota, Ahmedabad-382470</div>
+        </div>
+      </div>
+      <div class="text-right text-[10px]">
+        <div>📞 DATTAJI PATIL</div>
+        <div>7600224710, 9328448057</div>
+        <div class="qr-slot mt-1 ml-auto">QR</div>
+      </div>
+    </div>
+
+    <!-- Caution + At Owner's Risk + Insurance + Demurrage row -->
+    <table class="w-full text-[10px] mb-2">
+      <tr>
+        <td class="align-top w-1/4 border border-black p-1">
+          <div class="font-bold">CAUTION</div>
+          <div>The consignment will not be detained, diverted, re-routed without consignee Bank's written permission. Will be delivered at destination.</div>
+        </td>
+        <td class="align-top w-1/4 border border-black p-1">
+          <div class="text-center font-bold mb-1">AT OWNER'S RISK</div>
+          <div class="font-bold">INSURANCE</div>
+          <div>The consignor has stated that:</div>
+          <div>☑ He has not insured that consignment</div>
+          <div>☐ He has insured the consignment</div>
+          <div class="mt-1">Company: ______________________</div>
+          <div>Policy No: _________ Date: _______</div>
+          <div>Amount: _________ Risk: _________</div>
+        </td>
+        <td class="align-top w-1/4 border border-black p-1">
+          <div class="font-bold">SCHEDULE OF DEMURRAGE CHARGES</div>
+          <div>Demurrage is chargable after ___ days from today @ Rs. ___ per day per Qtl on Weight Charged.</div>
+        </td>
+        <td class="align-top w-1/4 border border-black p-1 relative">
+          <div>Truck No.: <span class="font-bold">GJ01AB1234</span></div>
+          <div class="mt-2 font-bold text-center">NOTICE</div>
+          <div class="text-[9px]">The Consignment covered by this Lorry Receipt shall stored at destination under the control of the Transport Operator and shall be delivered to or to the order of the Consignee Bank whose name is mentioned in the Lorry Receipt. It will under no circumstances be delivered to anyone without written authority from the Consignee Bank or its order Endorsed on the Consignee copy or on a separate Letter of authority.</div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Consignment note + address + dates -->
+    <table class="w-full text-[11px] mb-2">
+      <tr>
+        <td class="w-1/3 border border-black p-2 align-top">
+          <div class="font-bold text-center">CONSIGNMENT NOTE</div>
+          <div class="text-2xl font-bold text-center mt-1">JB/25-26/025</div>
+        </td>
+        <td class="w-2/3 border border-black p-2 align-top">
+          <div>Address Of Delivery Office:</div>
+          <div class="font-semibold">JB Transport Sarkhej Branch</div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="w-full text-[11px] mb-2">
+      <tr>
+        <td class="w-3/5 border border-black p-2 align-top">
+          <div><span class="font-bold">CONSIGNOR'S:</span> Coal King Biogene Pvt Ltd</div>
+          <div class="ml-16">12345 Krishna Complex, Sarkhej</div>
+          <div class="mt-2"><span class="font-bold">CONSIGNEE'S:</span> M/s Krishna Traders</div>
+          <div class="ml-16">Sanand Road, Ahmedabad</div>
+        </td>
+        <td class="w-2/5 border border-black p-2 align-top">
+          <div>Date: <span class="font-bold">2026-09-25</span></div>
+          <div>From: <span class="font-bold">Ahmedabad</span></div>
+          <div>To: <span class="font-bold">Sarkhej</span></div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Line item table -->
+    <table class="w-full pdf-hair text-[11px] mb-2">
+      <thead>
+        <tr>
+          <th class="w-16">Packages</th>
+          <th>Description ( Said to Contain )</th>
+          <th class="w-14">Weight Nett</th>
+          <th class="w-16">Weight Charged</th>
+          <th class="w-16">Rate</th>
+          <th class="w-24" colspan="2">FREIGHT<br/>ACCOUNT PAY / PAID</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-center">50</td>
+          <td>Cotton Bales</td>
+          <td class="text-center">4500</td>
+          <td class="text-center">5000</td>
+          <td class="text-right">4.80</td>
+          <td class="text-right">24,000</td>
+          <td class="text-right">00</td>
+        </tr>
+        <tr>
+          <td colspan="5" class="align-top" style="height:110px;">
+            <div class="mt-2"><span class="font-bold">Service Tax Payable By:</span></div>
+            <div>☑ Consignor  &nbsp;&nbsp; ☐ Consignee  &nbsp;&nbsp; ☐ Transporter</div>
+            <div class="mt-4 italic">Not responsible for any Breakage, Leakage, Damage, Bulates goods &amp; Fires</div>
+          </td>
+          <td colspan="2" class="align-top p-0">
+            <table class="w-full text-[11px]">
+              <tr><td class="border-b border-black text-right pr-1">S. Tax</td><td class="border-b border-l border-black text-right pr-1">—</td></tr>
+              <tr><td class="border-b border-black text-right pr-1">St. Ch</td><td class="border-b border-l border-black text-right pr-1">—</td></tr>
+              <tr><td class="border-b border-black text-right pr-1">Total</td><td class="border-b border-l border-black text-right pr-1">24,000</td></tr>
+              <tr><td class="border-b border-black text-right pr-1">Less Adv.</td><td class="border-b border-l border-black text-right pr-1">—</td></tr>
+              <tr><td class="text-right pr-1 font-bold">Total</td><td class="border-l border-black text-right pr-1 font-bold">24,000</td></tr>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Footer row -->
+    <div class="flex items-end justify-between mt-4 text-[11px]">
+      <div>
+        <div>Invoice No: <span class="font-semibold">INV-2026-091</span></div>
+        <div>Value: <span class="font-semibold">₹2,50,000</span> &nbsp;&nbsp; G.S.T No: <span class="font-semibold">24AABCC1234X1Z5</span></div>
+      </div>
+      <div class="text-right">
+        <div class="font-bold">For, JB Transports</div>
+        <div class="mt-8 border-t border-black w-40 text-center pt-1">Signature</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- VIEW 4: PARTY BILL PDF -->
+<!-- ============================================================ -->
+<section id="view-pb" class="view">
+  <div class="pdf-page text-[13px]">
+    <!-- Header -->
+    <div class="text-right text-[11px] mb-1">Subject to Ahmedabad Jurisdiction</div>
+    <div class="flex items-start justify-between mb-1">
+      <div class="flex items-center gap-2">
+        <div class="w-14 h-14 border-2 border-black flex items-center justify-center text-lg font-bold rounded-full">JB</div>
+        <div>
+          <div class="text-xl font-bold underline">JB Transports</div>
+          <div class="text-[10px]">201, Shine Swasti, Nr. Godrej Garden City,</div>
+          <div class="text-[10px]">Gota, Ahmedabad-382470</div>
+        </div>
+      </div>
+      <div class="text-right text-[11px]">
+        <div>Mobile: 7600224710</div>
+        <div>9328448057</div>
+        <div class="qr-slot mt-1 ml-auto">QR</div>
+      </div>
+    </div>
+
+    <table class="w-full mb-2 text-[12px]">
+      <tr>
+        <td class="border border-black p-2">Bill No: <span class="font-bold">JB/25-26/025</span></td>
+        <td class="border border-black p-2">Date: <span class="font-bold">2026-09-25</span></td>
+      </tr>
+      <tr>
+        <td colspan="2" class="border border-black p-2">
+          To M/s: <span class="font-bold">Coal King Biogene Pvt Ltd</span><br/>
+          Off: <span class="font-bold">12345 Krishna Complex, Sarkhej, Sanand Road, Ahmedabad</span>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Line items -->
+    <table class="w-full pdf-hair text-[12px]">
+      <thead>
+        <tr>
+          <th class="w-16">Billty No</th>
+          <th class="w-20">Date</th>
+          <th>Particulars</th>
+          <th class="w-20">Freight</th>
+          <th class="w-16">Hamali</th>
+          <th class="w-16">Halting</th>
+          <th class="w-24" colspan="2">Amount<br/><span class="text-[9px]">Rs. &nbsp; Ps.</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-center">JB/25-26/025</td>
+          <td class="text-center">2026-09-25</td>
+          <td>
+            Invoice No: INV-2026-091<br/>
+            Date: 2026-09-25<br/><br/>
+            We hereby Submit our bill for transportation of your goods.<br/><br/>
+            Vehicle: GJ01AB1234
+          </td>
+          <td class="text-right">24,000</td>
+          <td class="text-right">—</td>
+          <td class="text-right">—</td>
+          <td class="text-right">24,000</td>
+          <td class="text-right">00</td>
+        </tr>
+        <!-- Empty rows for handwriting-like feel -->
+        <tr style="height:40px;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr style="height:40px;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+
+    <div class="grid grid-cols-2 gap-2 mt-2 text-[12px]">
+      <div class="border border-black p-2">
+        <div>PAN No: <span class="font-bold">AUWPB0355R</span></div>
+        <div class="mt-2">Rs. (in words): <span class="italic font-semibold">Twenty Four Thousand Only</span></div>
+        <div class="mt-2 text-[10px]">After 30 days interest @ 18% annual will be on out standing bills.</div>
+        <div class="mt-3">Checked By: ____________________</div>
+      </div>
+      <div class="border border-black p-2 flex flex-col justify-between">
+        <div class="flex justify-between font-bold"><span>Total Rs.</span><span>24,000</span></div>
+        <div class="text-right mt-8">
+          <div class="border-t border-black pt-1">For, JB Transports</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- VIEW 5: DRIVER BILL PDF -->
+<!-- ============================================================ -->
+<section id="view-db" class="view">
+  <div class="pdf-page pdf-page-driver text-[13px]">
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-2">
+      <div class="flex items-center gap-2">
+        <div class="w-14 h-14 bg-navy text-white flex items-center justify-center text-xl font-bold rounded">JB</div>
+        <div>
+          <div class="text-xl font-bold text-red-700">JB TRANSPORTS</div>
+          <div class="text-[10px]">201, Shine Swasti, Nr. Godrej Garden City, Gota, Ahmedabad-382470</div>
+        </div>
+      </div>
+      <div class="text-right text-[11px]">
+        <div>M: 7600224710</div>
+        <div>9328448057</div>
+        <div class="qr-slot mt-1 ml-auto">QR</div>
+      </div>
+    </div>
+    <div class="text-center font-bold text-lg mb-3 border-t border-b border-black py-1">DRIVER BILL</div>
+
+    <table class="w-full pdf-hair text-[12px] mb-2">
+      <tr>
+        <td class="w-1/2 p-2">No./AMD/ <span class="font-bold">JB/25-26/025</span></td>
+        <td class="w-1/2 p-2">Date: <span class="font-bold">2026-09-25</span></td>
+      </tr>
+    </table>
+
+    <table class="w-full text-[12px] mb-2">
+      <tr>
+        <td class="w-3/5 border border-black p-2 align-top">
+          <div>Truck No: <span class="font-bold">GJ01AB1234</span></div>
+          <div>Driver / Owner Name: <span class="font-bold">Rahish Singh</span></div>
+          <div>Address: <span class="font-bold">Village Rampur, Dist Faizabad, UP</span></div>
+          <div>Phone (Owner): <span class="font-bold">9935227951</span></div>
+          <div>Transport Party: <span class="font-bold">Shri Meladi Mata A/C Tanwar Cargo</span></div>
+        </td>
+        <td class="w-2/5 border border-black p-2 align-top">
+          <div class="flex justify-between"><span>Total Advance:</span><span class="font-bold">12,000</span></div>
+          <div class="flex justify-between"><span>Previous Balance:</span><span class="font-bold">—</span></div>
+          <div class="flex justify-between"><span>Advance Total:</span><span class="font-bold">12,000</span></div>
+          <div class="flex justify-between"><span>Total Expense:</span><span class="font-bold">1,190</span></div>
+          <div class="flex justify-between font-bold"><span>Savings:</span><span>10,810</span></div>
+          <div class="flex justify-between"><span>Advance Deposited:</span><span>—</span></div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Fare table + expenses table -->
+    <table class="w-full pdf-hair text-[12px] mb-2">
+      <thead>
+        <tr>
+          <th>Fare</th><th>Advance</th><th>Balance Fare</th><th>Collection</th>
+          <th class="w-1/3">Office Expense</th><th class="w-16 text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="text-right">24,000</td>
+          <td class="text-right">12,000</td>
+          <td class="text-right">12,000</td>
+          <td class="text-right">—</td>
+          <td>Office Expense</td>
+          <td class="text-right">670</td>
+        </tr>
+        <tr>
+          <td></td><td></td><td></td><td></td>
+          <td>Collection A/C</td>
+          <td class="text-right">250</td>
+        </tr>
+        <tr>
+          <td></td><td></td><td></td><td></td>
+          <td>Loan</td>
+          <td class="text-right">220</td>
+        </tr>
+        <tr>
+          <td></td><td></td><td></td><td></td>
+          <td>Godown Crane</td>
+          <td class="text-right">—</td>
+        </tr>
+        <tr>
+          <td></td><td></td><td></td><td></td>
+          <td>Dala / Munshiyana / ST Charge</td>
+          <td class="text-right">50</td>
+        </tr>
+        <tr class="font-bold">
+          <td class="text-right">24,000</td>
+          <td class="text-right">12,000</td>
+          <td class="text-right">12,000</td>
+          <td class="text-right">—</td>
+          <td class="text-right">Total</td>
+          <td class="text-right">1,190</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="text-[11px] mb-4">
+      <div class="font-bold">Notes:</div>
+      <div>1) If the vehicle is delayed, inform the party immediately.</div>
+      <div>2) Responsibility for delay lies with the vehicle owner / driver.</div>
+      <div>3) If return fare is not received within 15 days, balance fare will not be paid.</div>
+    </div>
+
+    <div class="flex justify-between mt-8 text-[12px]">
+      <div>
+        <div class="border-t border-black w-48 text-center pt-1">Driver's Signature</div>
+      </div>
+      <div>
+        <div class="border-t border-black w-48 text-center pt-1">Partner</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      document.getElementById('view-' + b.dataset.view).classList.add('active');
+      window.scrollTo(0, 0);
+    });
+  });
+</script>
+
+</body>
+</html>
