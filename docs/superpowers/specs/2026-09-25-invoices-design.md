@@ -134,7 +134,7 @@ Single flat table. `INTEGER`/`REAL`/`TEXT`. All invoice-specific fields nullable
 | `db_driver_address`          | TEXT |                                              |
 | `db_owner_phone`             | TEXT | 10-digit                                     |
 | `db_transport_party`         | TEXT | Broker / booking party                       |
-| `db_fare`                    | REAL | Mirrors `lr_freight_total`                   |
+| `db_fare`                    | REAL | Soft-mirrors `lr_freight_total` on form open; driver's contracted rate often differs from party billed freight (transporter's margin), so the field is expected to be edited. |
 | `db_advance`                 | REAL |                                              |
 | `db_balance_fare`            | REAL | Computed = `fare − advance`                  |
 | `db_collection`              | REAL | (Vasuli)                                     |
@@ -181,6 +181,7 @@ New file: `backend/api.py` (extend existing router). All under `/invoices`.
 | DELETE | `/invoices/{id}`                         | Delete.                                |
 | GET    | `/invoices/{id}/pdf/{kind}`              | Stream one PDF; `kind` ∈ `lr` \| `party_bill` \| `driver_bill`. |
 | GET    | `/invoices/{id}/pdf/all`                 | Stream a ZIP of all 3 PDFs.            |
+| GET    | `/invoices/next-serial?date=YYYY-MM-DD`  | Returns `{ serial: "JB/25-26/025" }` — preview only, not allocated. Called by the form to show the user what serial they'll get. |
 
 **Pydantic model:** `InvoiceIn` with all writable fields (serial excluded — server-owned). Response shape includes the allocated `serial_number` and any server-computed totals.
 
@@ -201,6 +202,28 @@ Each template consumes the invoice dict and renders one A4 page.
 **QR slot:** Every template includes a `<div class="qr-slot">` in the header area (~60×60 px). The current build fills it with a placeholder pattern. When the QR feature ships, the slot is replaced with a QR image encoding `${APP_URL}/invoices/${serial_number}`.
 
 **Fonts:** Rely on system-installed serif for now. If we hit font gaps, bundle Noto Sans and Noto Sans Devanagari (Devanagari for future bilingual mode).
+
+**Company header constants** (name, address, phones, PAN) are static across all invoices for JB Transport. They live in a single Python module (`backend/pdf/company.py`) as a plain dict and are passed to every template render. This keeps them out of the DB (they'd be duplicated on every row) and out of the templates (so they're editable in one place).
+
+```python
+# backend/pdf/company.py
+COMPANY = {
+    "name": "JB Transports",
+    "address": "201, Shine Swasti, Nr. Godrej Garden City, Gota, Ahmedabad-382470",
+    "jurisdiction": "Ahmedabad",
+    "contact_person": "Dattaji Patil",
+    "phones": ["7600224710", "9328448057"],
+    "pan": "AUWPB0355R",
+    "logo_path": "backend/pdf/assets/jb_logo.png",
+}
+```
+
+**Amount-in-words** (Party Bill footer): rendered in the template using [`num2words`](https://pypi.org/project/num2words/) with the `lang='en_IN'` locale for Indian numbering (Lakh/Crore). Called from a Jinja filter `{{ pb_amount_total | inr_words }}`.
+
+**Dependencies to add to `backend/requirements.txt`:**
+- `weasyprint>=60`
+- `jinja2>=3.1`
+- `num2words>=0.5.13`
 
 ## 9. Frontend
 
