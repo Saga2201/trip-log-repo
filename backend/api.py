@@ -334,13 +334,35 @@ class InvoiceIn(BaseModel):
     mobile2: str = ""
     from_location: str = ""
     to_location: str = ""
+    # Consignor
     consignor_name: str = ""
     consignor_address: str = ""
+    consignor_email: str = ""
+    consignor_gstin: str = ""
+    consignor_contact: str = ""
+    consignor_bank_name: str = ""
+    # Consignee
     consignee_name: str = ""
     consignee_address: str = ""
+    consignee_email: str = ""
+    consignee_gstin: str = ""
+    consignee_contact: str = ""
+    consignee_bank_name: str = ""
+    # LR header extras
+    lr_bilty_no: str = ""
+    lr_vehicle_size: str = ""
+    lr_seal_number: str = ""
+    lr_delivery_address: str = ""
     lr_delivery_office_address: str = ""
+    lr_gate_pass_no: str = ""
+    lr_demurrage_after: str = ""
+    lr_notice_text: str = ""
+    # LR line item
+    lr_packaging_type: str = ""
     lr_packages: int = 0
+    lr_material_name: str = ""
     lr_description: str = ""
+    lr_hsn_code: str = ""
     lr_weight_nett: float = 0.0
     lr_weight_charged: float = 0.0
     lr_rate: float = 0.0
@@ -356,13 +378,32 @@ class InvoiceIn(BaseModel):
     lr_ref_invoice_no: str = ""
     lr_ref_value: float = 0.0
     lr_ref_gst_no: str = ""
+    lr_bill_invoice_date: str = ""
+    lr_eway_bill_no: str = ""
+    # LR charges
+    lr_halting_charge: float = 0.0
+    lr_load_unload_charge: float = 0.0
+    lr_bilty_charge: float = 0.0
+    lr_other_charge: float = 0.0
+    lr_advance_amount: float = 0.0
+    # LR receiving
+    lr_receiver_name: str = ""
+    lr_receiver_number: str = ""
+    lr_receiver_remark: str = ""
+    lr_receiver_status: str = ""
+    lr_remark: str = ""
+    # Party Bill
     pb_bill_to_name: str = ""
     pb_bill_to_address: str = ""
     pb_freight: float = 0.0
     pb_hamali: float = 0.0
     pb_halting: float = 0.0
+    # Driver Bill
     db_driver_name: str = ""
     db_driver_address: str = ""
+    db_driver_num: str = ""
+    db_driver_dl_number: str = ""
+    db_owner_name: str = ""
     db_owner_phone: str = ""
     db_transport_party: str = ""
     db_fare: float = 0.0
@@ -428,12 +469,17 @@ def invoice_pdf_all(inv_id: int):
     )
 
 
+_VALID_COPY_TYPES = {"consignor", "consignee", "office"}
+
+
 @app.get("/invoices/{inv_id}/pdf/{kind}")
-def invoice_pdf(inv_id: int, kind: str):
+def invoice_pdf(inv_id: int, kind: str, copy: str = "consignor"):
     if kind not in _VALID_KINDS:
         raise HTTPException(400, "kind must be one of: lr, party_bill, driver_bill")
+    if copy not in _VALID_COPY_TYPES:
+        raise HTTPException(400, "copy must be one of: consignor, consignee, office")
     inv = _invoice_or_404(inv_id)
-    pdf_bytes = render_pdf(kind, inv)
+    pdf_bytes = render_pdf(kind, inv, copy_type=copy)
     filename = f"{inv['serial_number'].replace('/', '_')}_{kind}.pdf"
     return Response(
         pdf_bytes,

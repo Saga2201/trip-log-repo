@@ -64,11 +64,29 @@ def init_db():
                 to_location TEXT DEFAULT '',
                 consignor_name TEXT DEFAULT '',
                 consignor_address TEXT DEFAULT '',
+                consignor_email TEXT DEFAULT '',
+                consignor_gstin TEXT DEFAULT '',
+                consignor_contact TEXT DEFAULT '',
+                consignor_bank_name TEXT DEFAULT '',
                 consignee_name TEXT DEFAULT '',
                 consignee_address TEXT DEFAULT '',
+                consignee_email TEXT DEFAULT '',
+                consignee_gstin TEXT DEFAULT '',
+                consignee_contact TEXT DEFAULT '',
+                consignee_bank_name TEXT DEFAULT '',
+                lr_bilty_no TEXT DEFAULT '',
+                lr_vehicle_size TEXT DEFAULT '',
+                lr_seal_number TEXT DEFAULT '',
+                lr_delivery_address TEXT DEFAULT '',
                 lr_delivery_office_address TEXT DEFAULT '',
+                lr_gate_pass_no TEXT DEFAULT '',
+                lr_demurrage_after TEXT DEFAULT '',
+                lr_notice_text TEXT DEFAULT '',
+                lr_packaging_type TEXT DEFAULT '',
                 lr_packages INTEGER DEFAULT 0,
+                lr_material_name TEXT DEFAULT '',
                 lr_description TEXT DEFAULT '',
+                lr_hsn_code TEXT DEFAULT '',
                 lr_weight_nett REAL DEFAULT 0,
                 lr_weight_charged REAL DEFAULT 0,
                 lr_rate REAL DEFAULT 0,
@@ -84,6 +102,18 @@ def init_db():
                 lr_ref_invoice_no TEXT DEFAULT '',
                 lr_ref_value REAL DEFAULT 0,
                 lr_ref_gst_no TEXT DEFAULT '',
+                lr_bill_invoice_date TEXT DEFAULT '',
+                lr_eway_bill_no TEXT DEFAULT '',
+                lr_halting_charge REAL DEFAULT 0,
+                lr_load_unload_charge REAL DEFAULT 0,
+                lr_bilty_charge REAL DEFAULT 0,
+                lr_other_charge REAL DEFAULT 0,
+                lr_advance_amount REAL DEFAULT 0,
+                lr_receiver_name TEXT DEFAULT '',
+                lr_receiver_number TEXT DEFAULT '',
+                lr_receiver_remark TEXT DEFAULT '',
+                lr_receiver_status TEXT DEFAULT '',
+                lr_remark TEXT DEFAULT '',
                 pb_bill_to_name TEXT DEFAULT '',
                 pb_bill_to_address TEXT DEFAULT '',
                 pb_freight REAL DEFAULT 0,
@@ -91,6 +121,9 @@ def init_db():
                 pb_halting REAL DEFAULT 0,
                 db_driver_name TEXT DEFAULT '',
                 db_driver_address TEXT DEFAULT '',
+                db_driver_num TEXT DEFAULT '',
+                db_driver_dl_number TEXT DEFAULT '',
+                db_owner_name TEXT DEFAULT '',
                 db_owner_phone TEXT DEFAULT '',
                 db_transport_party TEXT DEFAULT '',
                 db_fare REAL DEFAULT 0,
@@ -110,9 +143,30 @@ def init_db():
         ''')
         # Additive column migrations for existing invoices tables.
         existing_inv = {row[1] for row in conn.execute('PRAGMA table_info(invoices)')}
-        for col in ('mobile1', 'mobile2'):
+        _text_cols = [
+            'mobile1', 'mobile2',
+            # LR Sugam-style additions
+            'lr_bilty_no', 'lr_vehicle_size', 'lr_seal_number',
+            'lr_delivery_address', 'lr_gate_pass_no',
+            'lr_demurrage_after', 'lr_notice_text',
+            'consignor_email', 'consignor_gstin', 'consignor_contact', 'consignor_bank_name',
+            'consignee_email', 'consignee_gstin', 'consignee_contact', 'consignee_bank_name',
+            'lr_bill_invoice_date', 'lr_eway_bill_no',
+            'db_driver_num', 'db_driver_dl_number', 'db_owner_name',
+            'lr_packaging_type', 'lr_material_name', 'lr_hsn_code',
+            'lr_receiver_name', 'lr_receiver_number', 'lr_receiver_remark', 'lr_receiver_status',
+            'lr_remark',
+        ]
+        for col in _text_cols:
             if col not in existing_inv:
                 conn.execute(f"ALTER TABLE invoices ADD COLUMN {col} TEXT DEFAULT ''")
+        _real_cols = [
+            'lr_halting_charge', 'lr_load_unload_charge', 'lr_bilty_charge',
+            'lr_other_charge', 'lr_advance_amount',
+        ]
+        for col in _real_cols:
+            if col not in existing_inv:
+                conn.execute(f"ALTER TABLE invoices ADD COLUMN {col} REAL DEFAULT 0")
         conn.commit()
 
 
@@ -209,18 +263,29 @@ _INVOICE_COLS = [
     "date", "vehicle_number",
     "mobile1", "mobile2",
     "from_location", "to_location",
-    "consignor_name", "consignor_address",
-    "consignee_name", "consignee_address",
-    "lr_delivery_office_address", "lr_packages", "lr_description",
+    "consignor_name", "consignor_address", "consignor_email", "consignor_gstin",
+    "consignor_contact", "consignor_bank_name",
+    "consignee_name", "consignee_address", "consignee_email", "consignee_gstin",
+    "consignee_contact", "consignee_bank_name",
+    "lr_bilty_no", "lr_vehicle_size", "lr_seal_number",
+    "lr_delivery_address", "lr_delivery_office_address", "lr_gate_pass_no",
+    "lr_demurrage_after", "lr_notice_text",
+    "lr_packaging_type", "lr_packages", "lr_material_name", "lr_description", "lr_hsn_code",
     "lr_weight_nett", "lr_weight_charged", "lr_rate",
     "lr_service_tax", "lr_st_charge", "lr_less_advance",
     "lr_service_tax_payable_by",
     "lr_insurance_risk", "lr_insurance_company", "lr_insurance_policy_no",
     "lr_insurance_policy_date", "lr_insurance_amount",
     "lr_ref_invoice_no", "lr_ref_value", "lr_ref_gst_no",
+    "lr_bill_invoice_date", "lr_eway_bill_no",
+    "lr_halting_charge", "lr_load_unload_charge", "lr_bilty_charge",
+    "lr_other_charge", "lr_advance_amount",
+    "lr_receiver_name", "lr_receiver_number", "lr_receiver_remark", "lr_receiver_status",
+    "lr_remark",
     "pb_bill_to_name", "pb_bill_to_address",
     "pb_freight", "pb_hamali", "pb_halting",
-    "db_driver_name", "db_driver_address", "db_owner_phone", "db_transport_party",
+    "db_driver_name", "db_driver_address", "db_driver_num", "db_driver_dl_number",
+    "db_owner_name", "db_owner_phone", "db_transport_party",
     "db_fare", "db_advance", "db_collection",
     "db_previous_balance", "db_advance_deposited",
 ]
@@ -230,6 +295,8 @@ _NUMERIC_COLS = {
     "lr_weight_nett", "lr_weight_charged", "lr_rate",
     "lr_service_tax", "lr_st_charge", "lr_less_advance",
     "lr_insurance_amount", "lr_ref_value",
+    "lr_halting_charge", "lr_load_unload_charge", "lr_bilty_charge",
+    "lr_other_charge", "lr_advance_amount",
     "pb_freight", "pb_hamali", "pb_halting",
     "db_fare", "db_advance", "db_collection",
     "db_previous_balance", "db_advance_deposited",
@@ -240,12 +307,22 @@ def _enrich_invoice(row: dict) -> dict:
     """Add computed totals to an invoice dict."""
     lr_freight = (row.get("lr_weight_charged") or 0) * (row.get("lr_rate") or 0)
     lr_final = lr_freight + (row.get("lr_service_tax") or 0) + (row.get("lr_st_charge") or 0) - (row.get("lr_less_advance") or 0)
+    lr_total_amount = (
+        lr_freight
+        + (row.get("lr_halting_charge") or 0)
+        + (row.get("lr_load_unload_charge") or 0)
+        + (row.get("lr_bilty_charge") or 0)
+        + (row.get("lr_other_charge") or 0)
+    )
+    lr_balance_amount = lr_total_amount - (row.get("lr_advance_amount") or 0)
     pb_total = (row.get("pb_freight") or 0) + (row.get("pb_hamali") or 0) + (row.get("pb_halting") or 0)
     db_balance = (row.get("db_fare") or 0) - (row.get("db_advance") or 0)
     return {
         **row,
         "lr_freight_total": lr_freight,
         "lr_final_total": lr_final,
+        "lr_total_amount": lr_total_amount,
+        "lr_balance_amount": lr_balance_amount,
         "pb_amount_total": pb_total,
         "db_balance_fare": db_balance,
     }

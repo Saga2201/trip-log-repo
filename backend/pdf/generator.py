@@ -25,12 +25,12 @@ _KIND_TO_TEMPLATE = {
 }
 
 
-def render_pdf(kind: str, invoice: dict) -> bytes:
+def render_pdf(kind: str, invoice: dict, copy_type: str = "consignor") -> bytes:
     template_name = _KIND_TO_TEMPLATE.get(kind)
     if not template_name:
         raise ValueError(f"unknown kind: {kind!r}")
     template = _env.get_template(template_name)
-    html = template.render(inv=invoice, company=COMPANY)
+    html = template.render(inv=invoice, company=COMPANY, copy_type=copy_type)
     base_css = CSS(filename=str(_TEMPLATES_DIR / "_base.css"))
     return HTML(string=html, base_url=str(_TEMPLATES_DIR)).write_pdf(stylesheets=[base_css])
 

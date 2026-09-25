@@ -1,132 +1,267 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>LR {{ inv.serial_number }}</title></head>
+<html><head><meta charset="utf-8"><title>LR {{ inv.serial_number }}</title>
+<style>
+  @page { size: A4 landscape; margin: 8mm 8mm; }
+  body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9pt; }
+  .red { color: #d00; }
+  .blue { color: #0044aa; }
+  .u { text-decoration: underline; }
+  .box { border: 1px solid #111; padding: 4pt; }
+  .lbl { font-size: 7.5pt; color: #333; font-weight: 600; text-transform: uppercase; }
+  .val { font-weight: bold; font-size: 10pt; }
+  table.grid td, table.grid th { border: 1px solid #111; padding: 3pt 4pt; vertical-align: top; }
+  table.grid { border-collapse: collapse; width: 100%; }
+  .section-hdr { background: #f5f5ff; color: #d00; font-weight: bold; text-align: center; padding: 2pt; }
+  .cell-hdr { color: #d00; font-weight: bold; font-size: 8pt; }
+  .small { font-size: 8pt; }
+  .tiny { font-size: 7pt; }
+  .center { text-align: center; }
+  .right { text-align: right; }
+  .bold { font-weight: bold; }
+</style>
+</head>
 <body>
 
-<div class="center small">Subject To {{ company.jurisdiction }} Jurisdiction Only</div>
-
-<table style="margin-bottom:6px;">
+<!-- Top strip: logo | jurisdiction/company/tagline | mobile/copy/pan/gstin -->
+<table style="width:100%;margin-bottom:4pt;">
   <tr>
-    <td style="width:60%;vertical-align:middle;">
-      <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
+    <td style="width:15%;vertical-align:top;">
+      <img src="{{ company.logo_url }}" style="height:22mm;width:auto;" alt="{{ company.name }}" />
     </td>
-    <td class="right small" style="vertical-align:top;">
-      {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
-      {% if _mobiles %}<div>Mobile: {{ _mobiles | join(', ') }}</div>{% endif %}
-      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
+    <td style="width:60%;text-align:center;vertical-align:top;">
+      <div class="small u"><span class="bold">Subject To {{ company.jurisdiction | upper }}</span> jurisdiction</div>
+      <div class="red bold" style="font-size:16pt;">{{ company.name | upper }}</div>
+      {% if company.tagline %}<div class="blue small bold">{{ company.tagline | upper }}</div>{% endif %}
+      <div class="tiny bold" style="margin-top:2pt;">{{ company.address }}</div>
+      <div class="tiny">
+        {% if company.transport_reg_no %}Transport Reg. No.: <span class="bold">{{ company.transport_reg_no }}</span>,{% endif %}
+        {% if company.email %} E-mail: <span class="bold">{{ company.email }}</span>,{% endif %}
+        {% if company.website %} Website: <span class="bold">{{ company.website }}</span>{% endif %}
+      </div>
+    </td>
+    <td style="width:25%;vertical-align:top;text-align:right;">
+      <div class="small">
+        {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
+        {% for m in _mobiles %}<div><span class="bold">Mob:</span>&nbsp; {{ m }}</div>{% endfor %}
+      </div>
+      <div class="red bold" style="margin-top:2pt;">{{ copy_type | upper }} COPY</div>
+      <div class="tiny bold red">PAN NO : {{ company.pan }}</div>
+      <div class="tiny bold red">GSTIN : {{ company.gst }}</div>
     </td>
   </tr>
 </table>
 
-<table class="hair small" style="margin-bottom:6px;">
+<!-- Row: Demurrage | Insurance | Owner Risk/Caution | Bilty/Vehicle/Date | From/To -->
+<table class="grid" style="margin-bottom:0;">
   <tr>
-    <td style="width:25%;vertical-align:top;">
-      <div class="bold">CAUTION</div>
-      <div>The consignment will not be detained, diverted, re-routed without consignee Bank's written permission. Will be delivered at destination.</div>
+    <td style="width:16%;">
+      <div class="cell-hdr">SCHEDULE OF DEMURAARGE</div>
+      <div class="small">Demurrage Chargeable After {{ inv.lr_demurrage_after or '&nbsp;&nbsp;&nbsp;' | safe }} from the date of arrival Rs.</div>
+      <div class="cell-hdr center" style="margin-top:4pt;">NOTICE</div>
+      <div class="tiny">{{ inv.lr_notice_text or 'We are sending Vehicle no ' ~ inv.vehicle_number ~ ' as per your order. Please arrange to load the same and check up yourself all the paper of the vehicle before loading. You are requested to insure the goods otherwise the company is not liable for any loss or damages.' }}</div>
     </td>
-    <td style="width:25%;vertical-align:top;">
-      <div class="center bold">AT OWNER'S RISK</div>
-      <div class="bold">INSURANCE</div>
-      <div>The consignor has stated that:</div>
-      <div>{{ '☑' if inv.lr_insurance_risk == 'not_insured' else '☐' }} He has not insured that consignment</div>
-      <div>{{ '☑' if inv.lr_insurance_risk == 'insured' else '☐' }} He has insured the consignment</div>
-      <div>Company: {{ inv.lr_insurance_company or '________' }}</div>
-      <div>Policy No: {{ inv.lr_insurance_policy_no or '________' }} &nbsp; Date: {{ inv.lr_insurance_policy_date or '________' }}</div>
-      <div>Amount: {{ inv.lr_insurance_amount | format_inr }} &nbsp; Risk: {{ inv.lr_insurance_risk | replace('_',' ') | title }}</div>
+    <td style="width:18%;">
+      <div class="cell-hdr center">INSURANCE</div>
+      <div class="tiny">THE CUSTOMER HAS STATED THAT</div>
+      <div class="small">STATUS : <span class="bold">{{ 'INSURED' if inv.lr_insurance_risk == 'insured' else 'NON INSURED' }}</span></div>
+      <div class="small">COMPANY : <span class="bold">{{ inv.lr_insurance_company }}</span></div>
+      <div class="small">POLICY NO : <span class="bold">{{ inv.lr_insurance_policy_no }}</span></div>
+      <div class="small">AMOUNT : <span class="bold">{{ inv.lr_insurance_amount | format_inr if inv.lr_insurance_amount else '' }}</span></div>
+      <div class="small">DATE : <span class="bold">{{ inv.lr_insurance_policy_date }}</span></div>
+      <div class="small">RISK : <span class="bold">AT OWNER RISK</span></div>
+      <div class="small">GATE PASS NO. : <span class="bold">{{ inv.lr_gate_pass_no }}</span></div>
     </td>
-    <td style="width:25%;vertical-align:top;">
-      <div class="bold">SCHEDULE OF DEMURRAGE CHARGES</div>
-      <div>Demurrage is chargable after ___ days from today @ Rs. ___ per day per Qtl on Weight Charged.</div>
+    <td style="width:16%;">
+      <div class="cell-hdr center">AT OWNER RISK</div>
+      <div class="cell-hdr center">CAUTION</div>
+      <div class="tiny">This consignment will not be Detained, re-route, diverted or re-book without consignees / consignor bank written permission. it will be delivered at the destination.</div>
     </td>
-    <td style="width:25%;vertical-align:top;">
-      <div>Truck No.: <span class="bold">{{ inv.vehicle_number }}</span></div>
-      <div class="center bold" style="margin-top:4px;">NOTICE</div>
-      <div style="font-size:8pt;">The Consignment covered by this Lorry Receipt shall be stored at destination under the control of the Transport Operator and shall be delivered to or to the order of the Consignee Bank whose name is mentioned in the Lorry Receipt.</div>
+    <td style="width:22%;">
+      <table style="width:100%;">
+        <tr><td class="small">BILTY NO :</td><td class="val red">{{ inv.lr_bilty_no or inv.serial_number }}</td></tr>
+      </table>
+      <table style="width:100%;margin-top:4pt;border-top:1px solid #111;padding-top:2pt;">
+        <tr>
+          <td class="small">VEHICLE NUMBER :</td>
+          <td class="val">{{ inv.vehicle_number }}</td>
+        </tr>
+        <tr>
+          <td class="small">DATE :</td>
+          <td class="val">{{ inv.date }}</td>
+        </tr>
+      </table>
+      <table style="width:100%;margin-top:4pt;">
+        <tr>
+          <td class="small">Vehicle Size :</td><td class="small bold">{{ inv.lr_vehicle_size }}</td>
+          <td class="small">SEAL NUMBER :</td><td class="small bold">{{ inv.lr_seal_number }}</td>
+        </tr>
+      </table>
+      <div class="small" style="border-top:1px solid #111;margin-top:4pt;padding-top:2pt;">DELIVERY ADDRESS : <span class="bold">{{ inv.lr_delivery_address }}</span></div>
+    </td>
+    <td style="width:14%;">
+      <div class="cell-hdr center">From</div>
+      <div class="val center">{{ inv.from_location | upper }}</div>
+      <div class="cell-hdr center" style="border-top:1px solid #111;margin-top:6pt;padding-top:2pt;">To</div>
+      <div class="val center">{{ inv.to_location | upper }}</div>
     </td>
   </tr>
 </table>
 
-<table class="hair" style="margin-bottom:6px;">
+<!-- Consignor | Consignee | Bill/Invoice | Driver/Owner -->
+<table class="grid" style="margin-bottom:0;border-top:none;">
   <tr>
-    <td style="width:33%;vertical-align:top;">
-      <div class="center bold">CONSIGNMENT NOTE</div>
-      <div class="center" style="font-size:18pt;font-weight:bold;">{{ inv.serial_number }}</div>
+    <td class="cell-hdr center" colspan="2">CONSIGNOR'S DETAILS</td>
+    <td class="cell-hdr center" colspan="2">CONSIGNEE'S / BUYER'S DETAILS</td>
+    <td class="cell-hdr center" style="width:15%;">BILL/INVOICE NO</td>
+    <td class="cell-hdr center" style="width:15%;">&nbsp;</td>
+  </tr>
+  <tr>
+    <td class="small" style="width:6%;">NAME :</td>
+    <td class="val" style="width:28%;">{{ inv.consignor_name }}</td>
+    <td class="small" style="width:6%;">NAME :</td>
+    <td class="val" style="width:30%;">{{ inv.consignee_name }}</td>
+    <td class="val center" rowspan="3" style="vertical-align:middle;font-size:14pt;">{{ inv.lr_ref_invoice_no }}</td>
+    <td rowspan="3" style="vertical-align:top;padding:0;">
+      <table style="width:100%;height:100%;">
+        <tr><td class="small">DRIVER NAME :</td><td class="small bold">{{ inv.db_driver_name }}</td></tr>
+        <tr><td class="small">DRIVER NUM :</td><td class="small bold">{{ inv.db_driver_num }}</td></tr>
+        <tr><td class="small">DL NUMBER :</td><td class="small bold">{{ inv.db_driver_dl_number }}</td></tr>
+        <tr><td class="small">OWNER NAME :</td><td class="small bold">{{ inv.db_owner_name }}</td></tr>
+        <tr><td class="small">OWNER NUMBER :</td><td class="small bold">{{ inv.db_owner_phone }}</td></tr>
+      </table>
     </td>
-    <td style="width:67%;vertical-align:top;">
-      <div>Address Of Delivery Office:</div>
-      <div class="bold">{{ inv.lr_delivery_office_address }}</div>
-    </td>
+  </tr>
+  <tr>
+    <td class="small">ADDRESS :</td>
+    <td class="small bold">{{ inv.consignor_address }}</td>
+    <td class="small">ADDRESS :</td>
+    <td class="small bold">{{ inv.consignee_address }}</td>
+  </tr>
+  <tr>
+    <td class="small">EMAIL :</td>
+    <td class="small bold">{{ inv.consignor_email }}</td>
+    <td class="small">EMAIL :</td>
+    <td class="small bold">{{ inv.consignee_email }}</td>
+  </tr>
+  <tr>
+    <td class="small">GSTIN :</td>
+    <td class="small bold">{{ inv.consignor_gstin or inv.lr_ref_gst_no }}</td>
+    <td class="small">GSTIN :</td>
+    <td class="small bold">{{ inv.consignee_gstin }}</td>
+    <td colspan="2" class="center small">BILL/INVOICE DATE : <span class="bold">{{ inv.lr_bill_invoice_date or inv.date }}</span></td>
+  </tr>
+  <tr>
+    <td class="small">CONTACT :</td>
+    <td class="small bold">{{ inv.consignor_contact }}</td>
+    <td class="small">CONTACT :</td>
+    <td class="small bold">{{ inv.consignee_contact }}</td>
+    <td colspan="2" class="center small">E WAY BILL NO <span class="bold">{{ inv.lr_eway_bill_no }}</span></td>
+  </tr>
+  <tr>
+    <td class="small">Bank Name:</td>
+    <td class="small bold">{{ inv.consignor_bank_name }}</td>
+    <td class="small">Bank Name:</td>
+    <td class="small bold">{{ inv.consignee_bank_name }}</td>
+    <td colspan="2">&nbsp;</td>
   </tr>
 </table>
 
-<table class="hair" style="margin-bottom:6px;">
+<!-- Line items table + weight/rate/amount block -->
+<table class="grid" style="margin-bottom:0;border-top:none;">
   <tr>
-    <td style="width:60%;vertical-align:top;">
-      <div><span class="bold">CONSIGNOR'S:</span> {{ inv.consignor_name }}</div>
-      <div style="margin-left:70px;">{{ inv.consignor_address }}</div>
-      <div style="margin-top:6px;"><span class="bold">CONSIGNEE'S:</span> {{ inv.consignee_name }}</div>
-      <div style="margin-left:70px;">{{ inv.consignee_address }}</div>
-    </td>
-    <td style="width:40%;vertical-align:top;">
-      <div>Date: <span class="bold">{{ inv.date }}</span></div>
-      <div>From: <span class="bold">{{ inv.from_location }}</span></div>
-      <div>To: <span class="bold">{{ inv.to_location }}</span></div>
-    </td>
+    <th style="width:8%;">PACKAGING<br/>TYPE</th>
+    <th style="width:10%;">NUMBER OF ARTICLE</th>
+    <th style="width:11%;">MATERIAL<br/>NAME</th>
+    <th style="width:23%;">DESCRIPTION OF GOOD (SAID TO CONTAIN)</th>
+    <th style="width:9%;">HSN CODE</th>
+    <th colspan="2" style="width:11%;">WEIGHT</th>
+    <th style="width:8%;">Rate / MT</th>
+    <th colspan="2" style="width:20%;">AMOUNT</th>
+  </tr>
+  <tr>
+    <td class="center" rowspan="9" style="vertical-align:top;">{{ inv.lr_packaging_type }}</td>
+    <td class="center" rowspan="9" style="vertical-align:top;font-weight:bold;">{{ inv.lr_packages if inv.lr_packages else '' }}</td>
+    <td class="center" rowspan="9" style="vertical-align:top;font-weight:bold;">{{ inv.lr_material_name }}</td>
+    <td class="center" rowspan="9" style="vertical-align:top;font-weight:bold;">{{ inv.lr_description }}</td>
+    <td class="center" rowspan="9" style="vertical-align:top;">{{ inv.lr_hsn_code }}</td>
+    <td class="cell-hdr center" style="width:5.5%;">ACTUAL</td>
+    <td class="cell-hdr center" style="width:5.5%;">GUARANTEE</td>
+    <td class="center bold" rowspan="2" style="vertical-align:middle;">/ MT</td>
+    <td class="cell-hdr center">FREIGHT</td>
+    <td class="cell-hdr center">TO BE BILLED</td>
+  </tr>
+  <tr>
+    <td class="center bold" rowspan="8" style="vertical-align:top;">{{ '%.2f' % inv.lr_weight_nett if inv.lr_weight_nett else '' }}<br/>MT</td>
+    <td class="center bold" rowspan="8" style="vertical-align:top;">{{ '%.2f' % inv.lr_weight_charged if inv.lr_weight_charged else '' }}<br/>MT</td>
+    <td class="small">FREIGHT AMOUNT</td>
+    <td class="right bold">{{ inv.lr_freight_total | format_inr if inv.lr_freight_total else '' }}</td>
+  </tr>
+  <tr><td class="center bold" style="vertical-align:middle;">{{ inv.lr_rate | format_inr if inv.lr_rate else '' }}</td><td class="small">HALTING CHARGE</td><td class="right bold">{{ inv.lr_halting_charge | format_inr if inv.lr_halting_charge else '' }}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">Load/Unload Charge</td><td class="right bold">{{ inv.lr_load_unload_charge | format_inr if inv.lr_load_unload_charge else '' }}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">Bilty Charge</td><td class="right bold">{{ inv.lr_bilty_charge | format_inr if inv.lr_bilty_charge else '' }}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">OTHER CHARGE</td><td class="right bold">{{ inv.lr_other_charge | format_inr if inv.lr_other_charge else '' }}</td></tr>
+  <tr><td>&nbsp;</td><td class="small bold">TOTAL AMOUNT</td><td class="right bold">{{ inv.lr_total_amount | format_inr if inv.lr_total_amount else '' }}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">ADVANCE AMOUNT</td><td class="right bold">{{ inv.lr_advance_amount | format_inr if inv.lr_advance_amount else '' }}</td></tr>
+  <tr><td>&nbsp;</td><td class="small bold">BALANCE AMOUNT</td><td class="right bold">{{ inv.lr_balance_amount | format_inr if inv.lr_balance_amount else '' }}</td></tr>
+</table>
+
+<!-- Receiving | Signature area -->
+<table class="grid" style="margin-bottom:0;border-top:none;">
+  <tr>
+    <td colspan="4" class="cell-hdr">RECEIVING USE ONLY</td>
+    <td class="cell-hdr">REMARK</td>
+    <td class="cell-hdr">STATUS</td>
+    <td class="cell-hdr">AUTHENTICATION</td>
+  </tr>
+  <tr>
+    <td colspan="2" class="small">RECEIVER NAME : <span class="bold">{{ inv.lr_receiver_name }}</span></td>
+    <td colspan="2" class="small">RECEIVER NUMBER : <span class="bold">{{ inv.lr_receiver_number }}</span></td>
+    <td class="small bold">{{ inv.lr_receiver_remark }}</td>
+    <td class="small bold">{{ inv.lr_receiver_status }}</td>
+    <td class="right small" style="padding-top:12pt;">________________<br/><span class="bold">RECEIVER SIGN</span></td>
   </tr>
 </table>
 
-<table class="hair" style="margin-bottom:6px;">
-  <thead>
-    <tr>
-      <th>Packages</th>
-      <th>Description ( Said to Contain )</th>
-      <th>Weight Nett</th>
-      <th>Weight Charged</th>
-      <th>Rate</th>
-      <th colspan="2">FREIGHT ACCOUNT PAY / PAID</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="center">{{ inv.lr_packages }}</td>
-      <td>{{ inv.lr_description }}</td>
-      <td class="center">{{ inv.lr_weight_nett | format_inr }}</td>
-      <td class="center">{{ inv.lr_weight_charged | format_inr }}</td>
-      <td class="right">{{ inv.lr_rate }}</td>
-      <td class="right">{{ inv.lr_freight_total | format_inr }}</td>
-      <td class="right">00</td>
-    </tr>
-    <tr>
-      <td colspan="5" style="vertical-align:top;height:80pt;">
-        <div style="margin-top:4px;"><span class="bold">Service Tax Payable By:</span></div>
-        <div>
-          {{ '☑' if inv.lr_service_tax_payable_by == 'consignor' else '☐' }} Consignor
-          &nbsp;&nbsp; {{ '☑' if inv.lr_service_tax_payable_by == 'consignee' else '☐' }} Consignee
-          &nbsp;&nbsp; {{ '☑' if inv.lr_service_tax_payable_by == 'transporter' else '☐' }} Transporter
-        </div>
-        <div style="margin-top:12pt;font-style:italic;">Not responsible for any Breakage, Leakage, Damage, Bulates goods &amp; Fires</div>
-      </td>
-      <td colspan="2" style="padding:0;">
-        <table style="width:100%;font-size:11pt;">
-          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">S. Tax</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_service_tax | format_inr }}</td></tr>
-          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">St. Ch</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_st_charge | format_inr }}</td></tr>
-          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">Total</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_freight_total | format_inr }}</td></tr>
-          <tr><td class="right" style="padding-right:4px;border-bottom:1px solid #111;">Less Adv.</td><td class="right" style="padding-right:4px;border-bottom:1px solid #111;border-left:1px solid #111;">{{ inv.lr_less_advance | format_inr }}</td></tr>
-          <tr><td class="right bold" style="padding-right:4px;">Total</td><td class="right bold" style="padding-right:4px;border-left:1px solid #111;">{{ inv.lr_final_total | format_inr }}</td></tr>
-        </table>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-<table style="margin-top:12pt;">
+<!-- Bank details + Values + Remark + Branch address + Authorize sig -->
+<table style="width:100%;margin-top:4pt;">
   <tr>
-    <td style="width:60%;vertical-align:bottom;">
-      <div>Invoice No: <span class="bold">{{ inv.lr_ref_invoice_no }}</span></div>
-      <div>Value: <span class="bold">{{ inv.lr_ref_value | format_inr }}</span> &nbsp;&nbsp; G.S.T No: <span class="bold">{{ inv.lr_ref_gst_no }}</span></div>
+    <td style="width:70%;vertical-align:top;">
+      <table class="grid" style="width:100%;">
+        <tr>
+          <td colspan="4" class="cell-hdr">BANK ACCOUNT DETAILS</td>
+        </tr>
+        <tr>
+          <td class="small" style="width:22%;">BANK ACCOUNT NO. :</td>
+          <td class="small bold" style="width:28%;">{{ company.bank.account_no }}</td>
+          <td class="small" style="width:22%;">A/C HOLDER NAME :</td>
+          <td class="small bold" style="width:28%;">{{ company.bank.ac_holder }}</td>
+        </tr>
+        <tr>
+          <td class="small">IFSC CODE :</td>
+          <td class="small bold">{{ company.bank.ifsc }}</td>
+          <td class="small">BANK NAME :</td>
+          <td class="small bold">{{ company.bank.bank_name }}</td>
+        </tr>
+        <tr>
+          <td class="small">PAN CARD NAME :</td>
+          <td class="small bold">{{ company.bank.pan_holder or company.name }}</td>
+          <td class="small">PAN CARD NUMBER :</td>
+          <td class="small bold">{{ company.bank.pan_number or company.pan }}</td>
+        </tr>
+      </table>
+      <div class="small" style="margin-top:4pt;">
+        <span class="bold">VALUES OF GOODS :</span>
+        {{ inv.lr_ref_value | format_inr if inv.lr_ref_value else '' }}
+        {% if inv.lr_ref_value %}( {{ inv.lr_ref_value | inr_words }} ){% endif %}
+      </div>
+      <div class="small"><span class="bold">REMARK :</span> {{ inv.lr_remark or 'Dala and Hamali charges will paid by party (Consignor/Consignee)' }}</div>
+      <div class="small"><span class="bold">BRANCH OFFICE ADDRESS :</span> {{ company.branch_office_address }}</div>
+      <div class="tiny" style="margin-top:6pt;color:#555;">This electronic generated pdf does not require any physical signature. Date : {{ inv.updated_at or inv.created_at or '' }}</div>
     </td>
-    <td style="width:40%;text-align:right;vertical-align:bottom;">
-      <div class="bold">For, {{ company.name }}</div>
-      <div style="margin-top:24pt;border-top:1px solid #111;padding-top:2pt;">Signature</div>
+    <td style="width:30%;vertical-align:bottom;text-align:center;">
+      <div class="bold small">FOR, {{ company.name | upper }}</div>
+      <div style="height:20mm;"></div>
+      <div class="bold small red">AUTHORIZE SIGNATURE</div>
     </td>
   </tr>
 </table>

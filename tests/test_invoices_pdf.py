@@ -76,7 +76,7 @@ def test_lr_pdf_contains_key_fields():
     assert "Coal King Biogene" in text
     assert "Krishna Traders" in text
     assert "24,000" in text  # freight total
-    assert "Ahmedabad Jurisdiction" in text
+    assert "AHMEDABAD" in text  # jurisdiction — Sugam-style LR renders in caps
 
 
 def test_party_bill_pdf_contains_key_fields():
