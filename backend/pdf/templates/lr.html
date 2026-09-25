@@ -56,7 +56,7 @@
   <tr>
     <td style="width:16%;">
       <div class="cell-hdr">SCHEDULE OF DEMURAARGE</div>
-      <div class="small">Demurrage Chargeable After {{ inv.lr_demurrage_after or '&nbsp;&nbsp;&nbsp;' | safe }} from the date of arrival Rs.</div>
+      <div class="small">Demurrage Chargeable After {% if inv.lr_demurrage_after %}{{ inv.lr_demurrage_after }}{% else %}&nbsp;&nbsp;&nbsp;{% endif %} from the date of arrival Rs.</div>
       <div class="cell-hdr center" style="margin-top:4pt;">NOTICE</div>
       <div class="tiny">{{ inv.lr_notice_text or 'We are sending Vehicle no ' ~ inv.vehicle_number ~ ' as per your order. Please arrange to load the same and check up yourself all the paper of the vehicle before loading. You are requested to insure the goods otherwise the company is not liable for any loss or damages.' }}</div>
     </td>

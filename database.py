@@ -2,6 +2,7 @@ import sqlite3
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trips.db')
 IMAGES_DIR = Path(DB_PATH).parent / 'payment_images'
@@ -147,7 +148,7 @@ def init_db():
             'mobile1', 'mobile2',
             # LR Sugam-style additions
             'lr_bilty_no', 'lr_vehicle_size', 'lr_seal_number',
-            'lr_delivery_address', 'lr_gate_pass_no',
+            'lr_delivery_address', 'lr_delivery_office_address', 'lr_gate_pass_no',
             'lr_demurrage_after', 'lr_notice_text',
             'consignor_email', 'consignor_gstin', 'consignor_contact', 'consignor_bank_name',
             'consignee_email', 'consignee_gstin', 'consignee_contact', 'consignee_bank_name',
@@ -257,7 +258,6 @@ def delete_trip(trip_id):
 # ---------------------------------------------------------------------------
 # Invoices
 # ---------------------------------------------------------------------------
-from typing import List, Optional, Tuple
 
 _INVOICE_COLS = [
     "date", "vehicle_number",

@@ -106,7 +106,9 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
     }
   }, [open, invoiceId])
 
-  // Refresh serial preview when date crosses an FY boundary (new invoices only)
+  // Refresh serial preview when the date changes (new invoices only). Serial is a
+  // simple global counter now — the preview endpoint ignores the date, but the
+  // effect kicks in on any date change so the UI stays consistent.
   useEffect(() => {
     if (!open || invoiceId) return
     nextSerial(form.date).then(setSerialPreview).catch(() => {})
