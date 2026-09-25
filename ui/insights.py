@@ -29,23 +29,26 @@ def insights_page():
     total_trips    = len(enriched)
     avg_booking    = (total_revenue / total_trips) if total_trips else 0
 
-    with ui.column().style('width: 100%; padding: 24px; box-sizing: border-box; flex: 1; gap: 0;'):
-        with ui.row().style('align-items: center; gap: 10px; margin-bottom: 20px;'):
+    with ui.element('div').style(
+        'width: 100%; padding: 24px; box-sizing: border-box; flex: 1; '
+        'display: flex; flex-direction: column; gap: 0;'
+    ):
+        with ui.row().style('align-items: center; gap: 10px; margin-bottom: 20px; width: 100%;'):
             ui.icon('bar_chart').style('color: #1e3a5f; font-size: 28px;')
             ui.label('Business Insights').style('font-size: 20px; font-weight: 700; color: #1e3a5f;')
 
         # ── KPI Cards ─────────────────────────────────────────────────
-        with ui.row().style('gap: 16px; margin-bottom: 24px; flex-wrap: wrap;'):
+        with ui.row().style('gap: 16px; margin-bottom: 24px; flex-wrap: wrap; width: 100%;'):
             _kpi('Total Revenue',    f'₹{total_revenue:,.0f}',  '#1e3a5f')
             _kpi('Total Pending',    f'₹{total_pending:,.0f}',  '#e53935')
             _kpi('Total Trips',      str(total_trips),           '#f57c00')
             _kpi('Avg. Booking',     f'₹{avg_booking:,.0f}',    '#7b1fa2')
 
         # ── Row 2: Monthly chart + Pending list ────────────────────────
-        with ui.row().style('gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-start;'):
+        with ui.row().style('gap: 16px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-start; width: 100%;'):
 
             # Monthly Revenue Bar Chart
-            with ui.card().style('flex: 1.6; min-width: 300px; padding: 16px; border-radius: 8px;'):
+            with ui.card().style('flex: 1.6; min-width: 320px; padding: 16px; border-radius: 8px; box-sizing: border-box;'):
                 ui.label('Monthly Revenue (₹)').style('font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 8px;')
                 monthly = _monthly_revenue(enriched)
                 fig = go.Figure(data=[go.Bar(
@@ -54,57 +57,58 @@ def insights_page():
                     marker_color='#1e3a5f',
                 )])
                 fig.update_layout(
-                    margin=dict(l=10, r=10, t=10, b=10),
-                    height=220,
+                    margin=dict(l=10, r=10, t=10, b=40),
+                    height=240,
                     paper_bgcolor='white',
                     plot_bgcolor='white',
                     yaxis=dict(gridcolor='#f0f4f8'),
+                    xaxis=dict(tickangle=-30),
                 )
                 ui.plotly(fig).style('width: 100%;')
 
             # Pending Payments List
-            with ui.card().style('flex: 1; min-width: 220px; padding: 16px; border-radius: 8px;'):
-                ui.label('⚠️ Pending Payments').style('font-size: 13px; font-weight: 700; color: #e53935; margin-bottom: 8px;')
+            with ui.card().style('flex: 1; min-width: 260px; padding: 16px; border-radius: 8px; box-sizing: border-box;'):
+                ui.label('Pending Payments').style('font-size: 13px; font-weight: 700; color: #e53935; margin-bottom: 8px;')
                 pending_trips = sorted(
                     [t for t in enriched if t['pending'] > 0],
                     key=lambda t: t['pending'], reverse=True
                 )
                 if not pending_trips:
-                    ui.label('All trips are fully paid ✅').style('color: #888; font-size: 12px;')
+                    ui.label('All trips are fully paid').style('color: #888; font-size: 12px;')
                 for t in pending_trips[:10]:
                     with ui.element('div').style('border-bottom: 1px solid #f5f5f5; padding: 6px 0;'):
-                        with ui.row().style('justify-content: space-between; align-items: center;'):
-                            with ui.column().style('gap: 0;'):
+                        with ui.row().style('justify-content: space-between; align-items: center; width: 100%;'):
+                            with ui.column().style('gap: 0; flex: 1; min-width: 0;'):
                                 ui.label(t['vehicle_number']).style('font-size: 12px; font-weight: 600; color: #333;')
-                                ui.label(f"{t['loading_address']} → {t['unloading_address']} · {t['date']}").style('font-size: 10px; color: #888;')
-                            ui.label(f"₹{t['pending']:,.0f}").style('font-size: 12px; font-weight: 700; color: #e53935;')
+                                ui.label(f"{t['loading_address']} → {t['unloading_address']} · {t['date']}").style('font-size: 10px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;')
+                            ui.label(f"₹{t['pending']:,.0f}").style('font-size: 12px; font-weight: 700; color: #e53935; flex-shrink: 0;')
 
         # ── Row 3: Vehicle-wise + State-wise ──────────────────────────
-        with ui.row().style('gap: 16px; flex-wrap: wrap; align-items: flex-start;'):
+        with ui.row().style('gap: 16px; flex-wrap: wrap; align-items: flex-start; width: 100%;'):
 
             # Vehicle-wise table
-            with ui.card().style('flex: 1; min-width: 260px; padding: 16px; border-radius: 8px;'):
-                ui.label('🚛 Vehicle-wise Summary').style('font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 8px;')
+            with ui.card().style('flex: 1; min-width: 300px; padding: 16px; border-radius: 8px; box-sizing: border-box;'):
+                ui.label('Vehicle-wise Summary').style('font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 8px;')
                 vehicle_data = _vehicle_summary(enriched)
                 cols = [
-                    {'name': 'vehicle', 'label': 'Vehicle',   'field': 'vehicle'},
-                    {'name': 'trips',   'label': 'Trips',     'field': 'trips'},
-                    {'name': 'earnings','label': 'Earnings ₹','field': 'earnings'},
+                    {'name': 'vehicle', 'label': 'Vehicle',    'field': 'vehicle',  'align': 'left'},
+                    {'name': 'trips',   'label': 'Trips',      'field': 'trips',    'align': 'center'},
+                    {'name': 'earnings','label': 'Earnings ₹', 'field': 'earnings', 'align': 'right'},
                 ]
                 rows = [{'vehicle': v, 'trips': d['trips'], 'earnings': f"₹{d['earnings']:,.0f}"} for v, d in vehicle_data.items()]
-                ui.table(columns=cols, rows=rows, row_key='vehicle').style('font-size: 12px;')
+                ui.table(columns=cols, rows=rows, row_key='vehicle').style('font-size: 12px; width: 100%;').props('flat dense')
 
             # State-wise breakdown
-            with ui.card().style('flex: 1; min-width: 260px; padding: 16px; border-radius: 8px;'):
-                ui.label('📍 State-wise Trip Count').style('font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 12px;')
+            with ui.card().style('flex: 1; min-width: 300px; padding: 16px; border-radius: 8px; box-sizing: border-box;'):
+                ui.label('State-wise Trip Count').style('font-size: 13px; font-weight: 700; color: #1e3a5f; margin-bottom: 12px;')
                 state_data = _state_summary(enriched)
                 max_trips = max((v for v in state_data.values()), default=1)
                 for state, count in sorted(state_data.items(), key=lambda x: -x[1])[:8]:
                     pct = int((count / max_trips) * 100)
-                    with ui.element('div').style('margin-bottom: 8px;'):
-                        with ui.row().style('justify-content: space-between; margin-bottom: 2px;'):
-                            ui.label(state or '—').style('font-size: 11px; font-weight: 600; color: #333;')
-                            ui.label(f'{count} trips').style('font-size: 11px; color: #888;')
+                    with ui.element('div').style('margin-bottom: 10px;'):
+                        with ui.row().style('justify-content: space-between; margin-bottom: 4px; width: 100%;'):
+                            ui.label(state or '—').style('font-size: 12px; font-weight: 600; color: #333;')
+                            ui.label(f'{count} trips').style('font-size: 12px; color: #888;')
                         with ui.element('div').style('background: #f0f4f8; border-radius: 4px; height: 8px; overflow: hidden;'):
                             ui.element('div').style(f'background: #1e3a5f; width: {pct}%; height: 100%; border-radius: 4px;')
 

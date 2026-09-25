@@ -1,17 +1,18 @@
-from nicegui import ui
+from nicegui import ui, app
 import database
 from ui.trips import trips_page
 from ui.insights import insights_page
 
 database.init_db()
+app.add_static_files('/payment_images', str(database.IMAGES_DIR))
 
 
 GLOBAL_CSS = '''
     body { margin: 0; font-family: "Inter", "Segoe UI", sans-serif; }
-    .nicegui-content { padding: 0 !important; }
+    .nicegui-content { padding: 0 !important; display: flex; flex-direction: column; align-items: stretch; width: 100%; min-height: 100vh; }
     .q-drawer  { border-right: none !important; top: 0 !important; }
-    .q-page-container { padding-top: 0 !important; background-color: #f4f7fb; }
-    .q-page    { background-color: #f4f7fb; display: flex; flex-direction: column; }
+    .q-page-container { padding-top: 0 !important; background-color: #f4f7fb; display: flex; flex-direction: column; }
+    .q-page    { background-color: #f4f7fb; display: flex; flex-direction: column; flex: 1; }
     .q-layout  { min-height: 100vh; }
 '''
 
