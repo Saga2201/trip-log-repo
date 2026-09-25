@@ -15,7 +15,7 @@
 - Serial format: `JB/YY-YY/NNN`, zero-padded to 3 digits, per-FY (Apr–Mar). Immutable after allocation.
 - All bill labels/text on PDFs are **English only**.
 - Every PDF template reserves a `~60×60 px` `qr-slot` div in the header. No live QR encoding this iteration.
-- Company constants (name, address, phones, PAN) come from `backend/pdf/company.py`, never from the DB.
+- Company constants (name, address, phones, GST) come from `backend/pdf/company.py`, never from the DB.
 - Follow existing patterns: React modal shell mirrors `TripModal.jsx`; backend routes mirror `backend/api.py` conventions.
 - Additive DB migrations only via `database.init_db()` — do not touch the `trips` table.
 - Frequent commits: at least one commit per task.
@@ -71,7 +71,7 @@ frontend/src/components/Sidebar.jsx       # add "Invoices" nav item (desktop + m
 **Interfaces:**
 - Consumes: none
 - Produces:
-  - `backend.pdf.company.COMPANY: dict` — keys: `name, address, jurisdiction, contact_person, phones (list[str]), pan, logo_path`
+  - `backend.pdf.company.COMPANY: dict` — keys: `name, address, jurisdiction, phones (list[str]), gst, logo_path, logo_url`
   - Module import `backend.pdf` resolves without error
 
 - [ ] **Step 1: Add deps to `backend/requirements.txt`**
@@ -110,14 +110,18 @@ Both files are intentionally empty — they just mark the packages.
 # backend/pdf/company.py
 """Static company info used across all invoice PDF templates."""
 
+from pathlib import Path
+
+_LOGO_ABS = Path(__file__).parent / "assets" / "jb_logo.png"
+
 COMPANY = {
     "name": "JB Transports",
     "address": "201, Shine Swasti, Nr. Godrej Garden City, Gota, Ahmedabad-382470",
     "jurisdiction": "Ahmedabad",
-    "contact_person": "Dattaji Patil",
-    "phones": ["7600224710", "9328448057"],
-    "pan": "AUWPB0355R",
-    "logo_path": None,  # set to a file path when the logo asset is added
+    "phones": ["7600224710"],
+    "gst": "24DKCPP6873H2ZS",
+    "logo_path": str(_LOGO_ABS),
+    "logo_url": _LOGO_ABS.as_uri(),  # file:///... — WeasyPrint reads this from an <img src>
 }
 ```
 
@@ -132,7 +136,9 @@ def test_pdf_module_imports():
 
     assert COMPANY["name"] == "JB Transports"
     assert isinstance(COMPANY["phones"], list)
-    assert len(COMPANY["phones"]) == 2
+    assert len(COMPANY["phones"]) >= 1
+    assert "contact_person" not in COMPANY
+    assert COMPANY["gst"] == "24DKCPP6873H2ZS"
 ```
 
 - [ ] **Step 6: Run test**
@@ -877,7 +883,6 @@ git commit -m "feat(invoices): PDF rendering engine with Jinja + WeasyPrint + IN
       <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
-      <div>{{ company.contact_person }}</div>
       <div>{{ company.phones | join(', ') }}</div>
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
     </td>
@@ -1077,7 +1082,6 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>Mobile: {{ company.phones[0] }}</div>
-      <div>{{ company.phones[1] }}</div>
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
     </td>
   </tr>
@@ -1132,7 +1136,7 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
 <table style="margin-top:6pt;">
   <tr>
     <td style="width:50%;vertical-align:top;border:1px solid #111;padding:6pt;">
-      <div>PAN No: <span class="bold">{{ company.pan }}</span></div>
+      <div>GST No: <span class="bold">{{ company.gst }}</span></div>
       <div style="margin-top:6pt;">Rs. (in words): <span style="font-style:italic;font-weight:bold;">{{ inv.pb_amount_total | inr_words }}</span></div>
       <div style="margin-top:6pt;" class="small">After 30 days interest @ 18% annual will be on out standing bills.</div>
       <div style="margin-top:12pt;">Checked By: ____________________</div>
@@ -1159,7 +1163,7 @@ def test_party_bill_pdf_contains_key_fields():
     assert "Coal King Biogene" in text
     assert "24,000" in text                  # total
     assert "Twenty Four Thousand" in text    # amount in words
-    assert "AUWPB0355R" in text              # PAN from company
+    assert "24DKCPP6873H2ZS" in text         # GST from company
 ```
 
 - [ ] **Step 3: Run tests**
@@ -1202,7 +1206,6 @@ git commit -m "feat(invoices): full Party Bill PDF template"
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>M: {{ company.phones[0] }}</div>
-      <div>{{ company.phones[1] }}</div>
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
     </td>
   </tr>

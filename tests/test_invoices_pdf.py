@@ -16,7 +16,8 @@ def test_pdf_module_imports():
 
     assert COMPANY["name"] == "JB Transports"
     assert isinstance(COMPANY["phones"], list)
-    assert len(COMPANY["phones"]) == 2
+    assert len(COMPANY["phones"]) >= 1
+    assert "contact_person" not in COMPANY  # removed per user request
 
 
 def _seed_invoice():
