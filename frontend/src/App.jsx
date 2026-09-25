@@ -5,10 +5,13 @@ import TripsPage from './pages/TripsPage'
 import InsightsPage from './pages/InsightsPage'
 import InvoicesPage from './pages/InvoicesPage'
 import TripModal from './components/TripModal'
+import InvoiceModal from './components/InvoiceModal'
 
 export default function App() {
   const [modal, setModal] = useState({ open: false, tripId: null })
   const [refreshKey, setRefreshKey] = useState(0)
+  const [invModal, setInvModal] = useState({ open: false, invoiceId: null })
+  const [invRefreshKey, setInvRefreshKey] = useState(0)
 
   const openNew = () => setModal({ open: true, tripId: null })
   const openEdit = (id) => setModal({ open: true, tripId: id })
@@ -17,6 +20,11 @@ export default function App() {
     closeModal()
     setRefreshKey(k => k + 1)
   }
+
+  const openNewInvoice = () => setInvModal({ open: true, invoiceId: null })
+  const openEditInvoice = (id) => setInvModal({ open: true, invoiceId: id })
+  const closeInvModal = () => setInvModal({ open: false, invoiceId: null })
+  const onInvSaved = () => { closeInvModal(); setInvRefreshKey(k => k + 1) }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -29,7 +37,7 @@ export default function App() {
             element={<TripsPage onEditTrip={openEdit} refreshKey={refreshKey} />}
           />
           <Route path="/insights" element={<InsightsPage />} />
-          <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/invoices" element={<InvoicesPage onNewInvoice={openNewInvoice} onEditInvoice={openEditInvoice} refreshKey={invRefreshKey} />} />
         </Routes>
       </main>
 
@@ -39,6 +47,8 @@ export default function App() {
         onClose={closeModal}
         onSaved={onSaved}
       />
+
+      <InvoiceModal open={invModal.open} invoiceId={invModal.invoiceId} onClose={closeInvModal} onSaved={onInvSaved} />
     </div>
   )
 }
