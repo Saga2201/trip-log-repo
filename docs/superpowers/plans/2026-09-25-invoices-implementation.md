@@ -873,11 +873,11 @@ git commit -m "feat(invoices): PDF rendering engine with Jinja + WeasyPrint + IN
 
 <table style="margin-bottom:6px;">
   <tr>
-    <td style="width:60%;">
-      <div style="font-size:16pt;font-weight:bold;">{{ company.name }}</div>
-      <div class="small">{{ company.address }}</div>
+    <td style="width:60%;vertical-align:middle;">
+      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+      <div class="small" style="margin-top:2px;">{{ company.address }}</div>
     </td>
-    <td class="right small">
+    <td class="right small" style="vertical-align:top;">
       <div>{{ company.contact_person }}</div>
       <div>{{ company.phones | join(', ') }}</div>
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
@@ -1073,11 +1073,11 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
 
 <table style="margin-bottom:4px;">
   <tr>
-    <td style="width:60%;">
-      <div style="font-size:16pt;font-weight:bold;text-decoration:underline;">{{ company.name }}</div>
-      <div class="small">{{ company.address }}</div>
+    <td style="width:60%;vertical-align:middle;">
+      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+      <div class="small" style="margin-top:2px;">{{ company.address }}</div>
     </td>
-    <td class="right small">
+    <td class="right small" style="vertical-align:top;">
       <div>Mobile: {{ company.phones[0] }}</div>
       <div>{{ company.phones[1] }}</div>
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
@@ -1199,11 +1199,11 @@ git commit -m "feat(invoices): full Party Bill PDF template"
 
 <table style="margin-bottom:4px;">
   <tr>
-    <td style="width:60%;">
-      <div style="font-size:16pt;font-weight:bold;color:#b00;">{{ company.name | upper }}</div>
-      <div class="small">{{ company.address }}</div>
+    <td style="width:60%;vertical-align:middle;">
+      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+      <div class="small" style="margin-top:2px;">{{ company.address }}</div>
     </td>
-    <td class="right small">
+    <td class="right small" style="vertical-align:top;">
       <div>M: {{ company.phones[0] }}</div>
       <div>{{ company.phones[1] }}</div>
       <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
