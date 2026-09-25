@@ -705,11 +705,10 @@ table { border-collapse: collapse; width: 100%; }
 .hair td, .hair th { border: 1px solid #111; padding: 4px 6px; }
 .hair th { background: #f2f2f2; font-weight: 600; }
 
+/* Reserved space for future QR code image; kept invisible for now
+   so the header layout does not shift when the QR is added later. */
 .qr-slot {
   width: 22mm; height: 22mm;
-  border: 1px dashed #888;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 8pt; color: #888;
 }
 
 .right { text-align: right; }
@@ -883,8 +882,8 @@ git commit -m "feat(invoices): PDF rendering engine with Jinja + WeasyPrint + IN
       <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
-      <div>{{ company.phones | join(', ') }}</div>
-      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
+      <div>Mobile: {{ company.phones | join(', ') }}</div>
+      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
     </td>
   </tr>
 </table>
@@ -1082,7 +1081,7 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>Mobile: {{ company.phones[0] }}</div>
-      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
+      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
     </td>
   </tr>
 </table>
@@ -1205,8 +1204,8 @@ git commit -m "feat(invoices): full Party Bill PDF template"
       <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
-      <div>M: {{ company.phones[0] }}</div>
-      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
+      <div>Mobile: {{ company.phones[0] }}</div>
+      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
     </td>
   </tr>
 </table>
