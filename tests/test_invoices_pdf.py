@@ -87,3 +87,13 @@ def test_party_bill_pdf_contains_key_fields():
     assert "24,000" in text                  # total
     assert "Twenty-Four Thousand" in text    # amount in words
     assert "24DKCPP6873H2ZS" in text         # GST from company
+
+
+def test_driver_bill_pdf_contains_key_fields():
+    inv = _seed_invoice()
+    text = _pdf_text(render_pdf("driver_bill", inv))
+    assert inv["serial_number"] in text
+    assert "Rahish Singh" in text
+    assert "Shri Meladi Mata" in text
+    assert "12,000" in text            # balance_fare
+    assert "Driver's Signature" in text

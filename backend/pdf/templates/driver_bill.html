@@ -1,1 +1,91 @@
-<!doctype html><html><body><h1>Driver Bill {{ inv.serial_number }}</h1></body></html>
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Driver Bill {{ inv.serial_number }}</title></head>
+<body>
+
+<table style="margin-bottom:4px;">
+  <tr>
+    <td style="width:60%;vertical-align:middle;">
+      <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
+    </td>
+    <td class="right small" style="vertical-align:top;">
+      <div>M: {{ company.phones[0] }}</div>
+      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot">QR</div></div>
+    </td>
+  </tr>
+</table>
+
+<div class="center bold" style="border-top:1px solid #111;border-bottom:1px solid #111;padding:2pt 0;margin-bottom:6pt;font-size:14pt;">DRIVER BILL</div>
+
+<table class="hair" style="margin-bottom:4px;">
+  <tr>
+    <td>No./AMD/ <span class="bold">{{ inv.serial_number }}</span></td>
+    <td>Date: <span class="bold">{{ inv.date }}</span></td>
+  </tr>
+</table>
+
+<table style="margin-bottom:4px;">
+  <tr>
+    <td style="width:60%;border:1px solid #111;padding:6pt;vertical-align:top;">
+      <div>Truck No: <span class="bold">{{ inv.vehicle_number }}</span></div>
+      <div>Driver / Owner Name: <span class="bold">{{ inv.db_driver_name }}</span></div>
+      <div>Address: <span class="bold">{{ inv.db_driver_address }}</span></div>
+      <div>Phone (Owner): <span class="bold">{{ inv.db_owner_phone }}</span></div>
+      <div>Transport Party: <span class="bold">{{ inv.db_transport_party }}</span></div>
+    </td>
+    <td style="width:40%;border:1px solid #111;padding:6pt;vertical-align:top;">
+      <div style="display:flex;justify-content:space-between;"><span>Total Advance:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Previous Balance:</span><span class="bold">{{ inv.db_previous_balance | format_inr if inv.db_previous_balance else '—' }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Advance Total:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Total Expense:</span><span class="bold">{{ inv.db_expense_total | format_inr }}</span></div>
+      <div style="display:flex;justify-content:space-between;" class="bold"><span>Savings:</span><span>{{ inv.db_savings | format_inr }}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span>Advance Deposited:</span><span>{{ inv.db_advance_deposited | format_inr if inv.db_advance_deposited else '—' }}</span></div>
+    </td>
+  </tr>
+</table>
+
+<table class="hair" style="margin-bottom:4px;">
+  <thead>
+    <tr>
+      <th>Fare</th><th>Advance</th><th>Balance Fare</th><th>Collection</th>
+      <th>Office Expense</th><th>Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="right">{{ inv.db_fare | format_inr }}</td>
+      <td class="right">{{ inv.db_advance | format_inr }}</td>
+      <td class="right">{{ inv.db_balance_fare | format_inr }}</td>
+      <td class="right">{{ inv.db_collection | format_inr if inv.db_collection else '—' }}</td>
+      <td>Office Expense</td>
+      <td class="right">{{ inv.db_expense_office | format_inr }}</td>
+    </tr>
+    <tr><td></td><td></td><td></td><td></td><td>Collection A/C</td><td class="right">{{ inv.db_expense_collection_ac | format_inr }}</td></tr>
+    <tr><td></td><td></td><td></td><td></td><td>Loan</td><td class="right">{{ inv.db_expense_loan | format_inr }}</td></tr>
+    <tr><td></td><td></td><td></td><td></td><td>Godown Crane</td><td class="right">{{ inv.db_expense_godown_crane | format_inr if inv.db_expense_godown_crane else '—' }}</td></tr>
+    <tr><td></td><td></td><td></td><td></td><td>Dala / Munshiyana / ST Charge</td><td class="right">{{ inv.db_expense_st_charge | format_inr }}</td></tr>
+    <tr class="bold">
+      <td class="right">{{ inv.db_fare | format_inr }}</td>
+      <td class="right">{{ inv.db_advance | format_inr }}</td>
+      <td class="right">{{ inv.db_balance_fare | format_inr }}</td>
+      <td class="right">{{ inv.db_collection | format_inr if inv.db_collection else '—' }}</td>
+      <td class="right">Total</td>
+      <td class="right">{{ inv.db_expense_total | format_inr }}</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="small" style="margin-bottom:12pt;">
+  <div class="bold">Notes:</div>
+  <div>1) If the vehicle is delayed, inform the party immediately.</div>
+  <div>2) Responsibility for delay lies with the vehicle owner / driver.</div>
+  <div>3) If return fare is not received within 15 days, balance fare will not be paid.</div>
+</div>
+
+<table style="margin-top:20pt;">
+  <tr>
+    <td class="center"><div style="border-top:1px solid #111;padding-top:2pt;width:180pt;">Driver's Signature</div></td>
+    <td class="center right"><div style="border-top:1px solid #111;padding-top:2pt;width:180pt;margin-left:auto;">Partner</div></td>
+  </tr>
+</table>
+
+</body></html>
