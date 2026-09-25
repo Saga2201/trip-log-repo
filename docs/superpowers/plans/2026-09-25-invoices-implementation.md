@@ -875,7 +875,6 @@ git commit -m "feat(invoices): PDF rendering engine with Jinja + WeasyPrint + IN
   <tr>
     <td style="width:60%;vertical-align:middle;">
       <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
-      <div class="small" style="margin-top:2px;">{{ company.address }}</div>
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>{{ company.contact_person }}</div>
@@ -1075,7 +1074,6 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
   <tr>
     <td style="width:60%;vertical-align:middle;">
       <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
-      <div class="small" style="margin-top:2px;">{{ company.address }}</div>
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>Mobile: {{ company.phones[0] }}</div>
@@ -1201,7 +1199,6 @@ git commit -m "feat(invoices): full Party Bill PDF template"
   <tr>
     <td style="width:60%;vertical-align:middle;">
       <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
-      <div class="small" style="margin-top:2px;">{{ company.address }}</div>
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>M: {{ company.phones[0] }}</div>
