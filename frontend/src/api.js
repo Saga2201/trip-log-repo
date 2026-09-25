@@ -22,3 +22,13 @@ export const markComplete = (id) => api.patch(`/trips/${id}/complete`).then(r =>
 export const markReopen   = (id) => api.patch(`/trips/${id}/reopen`).then(r => r.data)
 
 export const exportExcel = () => window.open('/api/export')
+
+// ── Invoices ─────────────────────────────────────────────────────
+export const getInvoices          = ()             => api.get('/invoices').then(r => r.data)
+export const getInvoice           = (id)           => api.get(`/invoices/${id}`).then(r => r.data)
+export const createInvoice        = (data)         => api.post('/invoices', data).then(r => r.data)
+export const updateInvoice        = (id, data)     => api.put(`/invoices/${id}`, data).then(r => r.data)
+export const deleteInvoice        = (id)           => api.delete(`/invoices/${id}`).then(r => r.data)
+export const nextSerial           = (date)         => api.get('/invoices/next-serial', { params: { date } }).then(r => r.data.serial)
+export const invoicePdfUrl        = (id, kind)     => `/api/invoices/${id}/pdf/${kind}`
+export const invoiceAllPdfsUrl    = (id)           => `/api/invoices/${id}/pdf/all`

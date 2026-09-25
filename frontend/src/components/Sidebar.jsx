@@ -1,6 +1,6 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { Truck, List, PlusCircle, BarChart2, Download } from 'lucide-react'
+import { Truck, List, PlusCircle, BarChart2, Download, FileText } from 'lucide-react'
 import { exportExcel } from '../api'
 
 export default function Sidebar({ onNewTrip }) {
@@ -37,6 +37,11 @@ export default function Sidebar({ onNewTrip }) {
           <NavLink to="/insights" className={({ isActive }) => (isActive ? navActive : navInactive)}>
             <BarChart2 size={18} />
             Insights
+          </NavLink>
+
+          <NavLink to="/invoices" className={({ isActive }) => (isActive ? navActive : navInactive)}>
+            <FileText size={18} />
+            Invoices
           </NavLink>
         </nav>
 
@@ -82,6 +87,11 @@ export default function Sidebar({ onNewTrip }) {
         <NavLink to="/insights" className={({ isActive }) => (isActive ? mobileNavActive : mobileNavInactive)}>
           <BarChart2 size={20} />
           Insights
+        </NavLink>
+
+        <NavLink to="/invoices" className={({ isActive }) => (isActive ? mobileNavActive : mobileNavInactive)}>
+          <FileText size={20} />
+          Invoices
         </NavLink>
 
         <button onClick={exportExcel} className={mobileNavInactive + ' border-0 bg-transparent cursor-pointer'}>

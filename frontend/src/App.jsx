@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import TripsPage from './pages/TripsPage'
 import InsightsPage from './pages/InsightsPage'
+import InvoicesPage from './pages/InvoicesPage'
 import TripModal from './components/TripModal'
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
             element={<TripsPage onEditTrip={openEdit} refreshKey={refreshKey} />}
           />
           <Route path="/insights" element={<InsightsPage />} />
+          <Route path="/invoices" element={<InvoicesPage />} />
         </Routes>
       </main>
 
