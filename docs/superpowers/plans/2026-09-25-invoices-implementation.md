@@ -880,7 +880,7 @@ git commit -m "feat(invoices): PDF rendering engine with Jinja + WeasyPrint + IN
 <table style="margin-bottom:6px;">
   <tr>
     <td style="width:60%;vertical-align:middle;">
-      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+      <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>{{ company.phones | join(', ') }}</div>
@@ -1078,7 +1078,7 @@ git commit -m "feat(invoices): full LR PDF template with content assertion tests
 <table style="margin-bottom:4px;">
   <tr>
     <td style="width:60%;vertical-align:middle;">
-      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+      <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>Mobile: {{ company.phones[0] }}</div>
@@ -1202,7 +1202,7 @@ git commit -m "feat(invoices): full Party Bill PDF template"
 <table style="margin-bottom:4px;">
   <tr>
     <td style="width:60%;vertical-align:middle;">
-      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+      <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
     </td>
     <td class="right small" style="vertical-align:top;">
       <div>M: {{ company.phones[0] }}</div>
