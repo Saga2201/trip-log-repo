@@ -123,9 +123,12 @@ def init_db():
                 bank_pan_number TEXT DEFAULT '',
                 pb_bill_to_name TEXT DEFAULT '',
                 pb_bill_to_address TEXT DEFAULT '',
+                pb_bill_to_gstin TEXT DEFAULT '',
                 pb_freight REAL DEFAULT 0,
                 pb_hamali REAL DEFAULT 0,
                 pb_halting REAL DEFAULT 0,
+                pb_deduction_amount REAL DEFAULT 0,
+                pb_remarks TEXT DEFAULT '',
                 db_driver_name TEXT DEFAULT '',
                 db_driver_address TEXT DEFAULT '',
                 db_driver_num TEXT DEFAULT '',
@@ -165,6 +168,7 @@ def init_db():
             'lr_remark',
             'bank_account_no', 'bank_ifsc', 'bank_ac_holder', 'bank_name',
             'bank_pan_holder', 'bank_pan_number',
+            'pb_bill_to_gstin', 'pb_remarks',
         ]
         for col in _text_cols:
             if col not in existing_inv:
@@ -172,6 +176,7 @@ def init_db():
         _real_cols = [
             'lr_halting_charge', 'lr_load_unload_charge', 'lr_bilty_charge',
             'lr_other_charge', 'lr_advance_amount',
+            'pb_deduction_amount',
         ]
         for col in _real_cols:
             if col not in existing_inv:
@@ -292,8 +297,9 @@ _INVOICE_COLS = [
     "lr_remark",
     "bank_account_no", "bank_ifsc", "bank_ac_holder", "bank_name",
     "bank_pan_holder", "bank_pan_number",
-    "pb_bill_to_name", "pb_bill_to_address",
+    "pb_bill_to_name", "pb_bill_to_address", "pb_bill_to_gstin",
     "pb_freight", "pb_hamali", "pb_halting",
+    "pb_deduction_amount", "pb_remarks",
     "db_driver_name", "db_driver_address", "db_driver_num", "db_driver_dl_number",
     "db_owner_name", "db_owner_phone", "db_transport_party",
     "db_fare", "db_advance", "db_collection",
@@ -307,7 +313,7 @@ _NUMERIC_COLS = {
     "lr_insurance_amount", "lr_ref_value",
     "lr_halting_charge", "lr_load_unload_charge", "lr_bilty_charge",
     "lr_other_charge", "lr_advance_amount",
-    "pb_freight", "pb_hamali", "pb_halting",
+    "pb_freight", "pb_hamali", "pb_halting", "pb_deduction_amount",
     "db_fare", "db_advance", "db_collection",
     "db_previous_balance", "db_advance_deposited",
 }
@@ -326,6 +332,19 @@ def _enrich_invoice(row: dict) -> dict:
     )
     lr_balance_amount = lr_total_amount - (row.get("lr_advance_amount") or 0)
     pb_total = (row.get("pb_freight") or 0) + (row.get("pb_hamali") or 0) + (row.get("pb_halting") or 0)
+    # Party Bill (new BILL INVOICE format) totals
+    pb_others_charges = (
+        (row.get("lr_load_unload_charge") or 0)
+        + (row.get("lr_bilty_charge") or 0)
+        + (row.get("lr_other_charge") or 0)
+    )
+    pb_trip_amount = (
+        lr_freight
+        + (row.get("lr_halting_charge") or 0)
+        + pb_others_charges
+        - (row.get("pb_deduction_amount") or 0)
+    )
+    pb_balance_amount = pb_trip_amount - (row.get("lr_advance_amount") or 0)
     db_balance = (row.get("db_fare") or 0) - (row.get("db_advance") or 0)
     return {
         **row,
@@ -334,6 +353,9 @@ def _enrich_invoice(row: dict) -> dict:
         "lr_total_amount": lr_total_amount,
         "lr_balance_amount": lr_balance_amount,
         "pb_amount_total": pb_total,
+        "pb_others_charges": pb_others_charges,
+        "pb_trip_amount": pb_trip_amount,
+        "pb_balance_amount": pb_balance_amount,
         "db_balance_fare": db_balance,
     }
 

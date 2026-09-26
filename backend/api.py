@@ -402,9 +402,12 @@ class InvoiceIn(BaseModel):
     # Party Bill
     pb_bill_to_name: str = ""
     pb_bill_to_address: str = ""
+    pb_bill_to_gstin: str = ""
     pb_freight: float = 0.0
     pb_hamali: float = 0.0
     pb_halting: float = 0.0
+    pb_deduction_amount: float = 0.0
+    pb_remarks: str = ""
     # Driver Bill
     db_driver_name: str = ""
     db_driver_address: str = ""

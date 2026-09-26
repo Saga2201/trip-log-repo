@@ -41,8 +41,9 @@ const EMPTY = {
   bank_pan_holder: 'ANKIT MAHADEVBHAI PAWAR',
   bank_pan_number: 'DKCPP6873H',
   // Party Bill
-  pb_bill_to_name: '', pb_bill_to_address: '',
+  pb_bill_to_name: '', pb_bill_to_address: '', pb_bill_to_gstin: '',
   pb_freight: '', pb_hamali: '', pb_halting: '',
+  pb_deduction_amount: '', pb_remarks: '',
   // Driver Bill
   db_driver_name: '', db_driver_address: '', db_driver_num: '',
   db_driver_dl_number: '', db_owner_name: '', db_owner_phone: '',
@@ -55,7 +56,7 @@ const NUMERIC = new Set([
   'lr_packages','lr_weight_nett','lr_weight_charged','lr_rate',
   'lr_service_tax','lr_st_charge','lr_less_advance','lr_insurance_amount','lr_ref_value',
   'lr_halting_charge','lr_load_unload_charge','lr_bilty_charge','lr_other_charge','lr_advance_amount',
-  'pb_freight','pb_hamali','pb_halting',
+  'pb_freight','pb_hamali','pb_halting','pb_deduction_amount',
   'db_fare','db_advance','db_collection','db_previous_balance','db_advance_deposited',
 ])
 
@@ -140,6 +141,7 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
   }
   useEffect(() => { if (!invoiceId) mirrorSet('pb_bill_to_name', form.consignor_name) }, [form.consignor_name])
   useEffect(() => { if (!invoiceId) mirrorSet('pb_bill_to_address', form.consignor_address) }, [form.consignor_address])
+  useEffect(() => { if (!invoiceId) mirrorSet('pb_bill_to_gstin', form.consignor_gstin) }, [form.consignor_gstin])
 
   // Computed values (read-only fields shown to the user)
   const lrFreight = useMemo(() => (parseFloat(form.lr_weight_charged) || 0) * (parseFloat(form.lr_rate) || 0), [form.lr_weight_charged, form.lr_rate])
@@ -358,14 +360,36 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
           </Section>
 
           <Section icon={CreditCard} title="Party Bill Details" color="purple">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <p className="text-xs text-purple-700 mb-3">💡 The Party Bill "BILL INVOICE" pulls the trip charges (freight, halting, load/unload, bilty, other) from the <b>LR Details</b> section. Set the fields below only for party-bill-specific overrides.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Field label="Bill To Name" hint="mirrors consignor"><input value={form.pb_bill_to_name} onChange={set('pb_bill_to_name')} className={inputCls} /></Field>
               <Field label="Bill To Address" hint="mirrors consignor"><input value={form.pb_bill_to_address} onChange={set('pb_bill_to_address')} className={inputCls} /></Field>
-              <Field label="Freight (₹)" hint="mirrors LR total"><input type="number" min="0" value={form.pb_freight} onChange={set('pb_freight')} className={inputCls} /></Field>
-              <Field label="Hamali (₹)"><input type="number" min="0" value={form.pb_hamali} onChange={set('pb_hamali')} className={inputCls} /></Field>
-              <Field label="Halting (₹)"><input type="number" min="0" value={form.pb_halting} onChange={set('pb_halting')} className={inputCls} /></Field>
-              <Field label="Total Amount"><div className={roCls}>₹{pbTotal.toLocaleString('en-IN')}</div></Field>
+              <Field label="Bill To GSTIN" hint="mirrors consignor gstin"><input value={form.pb_bill_to_gstin} onChange={set('pb_bill_to_gstin')} className={inputCls + ' uppercase'} /></Field>
+              <Field label="Deduction Amount (₹)"><input type="number" min="0" value={form.pb_deduction_amount} onChange={set('pb_deduction_amount')} className={inputCls} /></Field>
+              <div className="sm:col-span-2"><Field label="Remarks"><input value={form.pb_remarks} onChange={set('pb_remarks')} placeholder="Optional line printed under HSN/SAC" className={inputCls} /></Field></div>
             </div>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
+              <div className="bg-white rounded-lg p-3 border border-purple-200">
+                <div className="text-[10px] font-bold uppercase text-gray-500">Trip Amount</div>
+                <div className="font-bold text-navy">₹{((parseFloat(form.lr_weight_charged) || 0) * (parseFloat(form.lr_rate) || 0) + (parseFloat(form.lr_halting_charge) || 0) + (parseFloat(form.lr_load_unload_charge) || 0) + (parseFloat(form.lr_bilty_charge) || 0) + (parseFloat(form.lr_other_charge) || 0) - (parseFloat(form.pb_deduction_amount) || 0)).toLocaleString('en-IN')}</div>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-purple-200">
+                <div className="text-[10px] font-bold uppercase text-gray-500">Advance</div>
+                <div className="font-bold text-navy">₹{(parseFloat(form.lr_advance_amount) || 0).toLocaleString('en-IN')}</div>
+              </div>
+              <div className="bg-white rounded-lg p-3 border border-purple-200 sm:col-span-2">
+                <div className="text-[10px] font-bold uppercase text-gray-500">Net Payable (Balance)</div>
+                <div className="font-bold text-green-700 text-base">₹{((parseFloat(form.lr_weight_charged) || 0) * (parseFloat(form.lr_rate) || 0) + (parseFloat(form.lr_halting_charge) || 0) + (parseFloat(form.lr_load_unload_charge) || 0) + (parseFloat(form.lr_bilty_charge) || 0) + (parseFloat(form.lr_other_charge) || 0) - (parseFloat(form.pb_deduction_amount) || 0) - (parseFloat(form.lr_advance_amount) || 0)).toLocaleString('en-IN')}</div>
+              </div>
+            </div>
+            <details className="mt-3 text-xs">
+              <summary className="cursor-pointer text-gray-500">Legacy fields (older Party Bill format — kept for backward compat)</summary>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                <Field label="Freight (legacy) ₹"><input type="number" min="0" value={form.pb_freight} onChange={set('pb_freight')} className={inputCls} /></Field>
+                <Field label="Hamali (legacy) ₹"><input type="number" min="0" value={form.pb_hamali} onChange={set('pb_hamali')} className={inputCls} /></Field>
+                <Field label="Halting (legacy) ₹"><input type="number" min="0" value={form.pb_halting} onChange={set('pb_halting')} className={inputCls} /></Field>
+              </div>
+            </details>
           </Section>
 
           <Section icon={User} title="Driver Bill Details" color="yellow">
