@@ -70,13 +70,26 @@ def _pdf_text(pdf_bytes: bytes) -> str:
 
 def test_lr_pdf_contains_key_fields():
     inv = _seed_invoice()
+    # LR now hides amount cells unless lr_show_amounts is on — flip it so the
+    # freight-total assertion below exercises the visible path.
+    inv["lr_show_amounts"] = 1
     text = _pdf_text(render_pdf("lr", inv))
     assert inv["serial_number"] in text
     assert inv["vehicle_number"] in text
     assert "Coal King Biogene" in text
     assert "Krishna Traders" in text
-    assert "24,000" in text  # freight total
+    assert "24,000" in text  # freight total (visible because lr_show_amounts=1)
     assert "AHMEDABAD" in text  # jurisdiction — Sugam-style LR renders in caps
+
+
+def test_lr_pdf_hides_amounts_by_default():
+    inv = _seed_invoice()  # default lr_show_amounts=0
+    text = _pdf_text(render_pdf("lr", inv))
+    # Labels still render...
+    assert "FREIGHT AMOUNT" in text
+    assert "TOTAL AMOUNT" in text
+    # ...but the values do not.
+    assert "24,000" not in text
 
 
 def test_party_bill_pdf_contains_key_fields():
