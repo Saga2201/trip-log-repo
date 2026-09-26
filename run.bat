@@ -9,11 +9,12 @@ cd /d "%~dp0"
 ::
 ::  Does everything setup.bat + start.bat did, in one go:
 ::    1. Checks python and node/npm
-::    2. Creates .venv and installs backend deps (skips if already done)
-::    3. Installs frontend deps (skips if already done)
-::    4. Initializes the database (idempotent)
-::    5. Starts backend and frontend in their own windows
-::    6. Opens the app in your browser
+::    2. Checks GTK runtime (needed by WeasyPrint for PDF generation)
+::    3. Creates .venv and installs backend deps (skips if already done)
+::    4. Installs frontend deps (skips if already done)
+::    5. Initializes the database (idempotent)
+::    6. Starts backend and frontend in their own windows
+::    7. Opens the app in your browser
 ::  Close the "Backend" / "Frontend" console windows to stop the servers.
 :: ==========================================================================
 
@@ -59,8 +60,53 @@ IF ERRORLEVEL 1 (
 FOR /f "tokens=*" %%v IN ('node --version') DO echo         Node %%v found.
 FOR /f "tokens=*" %%v IN ('npm --version') DO echo         npm  %%v found.
 
-:: ── 3. Python venv + backend deps ────────────────────────
-echo  [3/6] Setting up Python virtual environment...
+:: ── 3. GTK runtime (WeasyPrint PDF generation) ───────────
+echo  [3/7] Checking GTK runtime (required for PDF generation)...
+set "GTK_OK="
+:: Look in the common install locations. MSYS2 ships /mingw64/bin, standalone
+:: GTK installer ships C:\Program Files\GTK3-Runtime Win64\bin.
+IF EXIST "C:\msys64\mingw64\bin\libgobject-2.0-0.dll" (
+    echo         Found MSYS2 GTK libraries at C:\msys64\mingw64\bin
+    set "GTK_OK=1"
+    :: Prepend to PATH for this session so uvicorn's subprocesses see it.
+    set "PATH=C:\msys64\mingw64\bin;%PATH%"
+)
+IF NOT DEFINED GTK_OK IF EXIST "C:\Program Files\GTK3-Runtime Win64\bin\libgobject-2.0-0.dll" (
+    echo         Found GTK3-Runtime at C:\Program Files\GTK3-Runtime Win64\bin
+    set "GTK_OK=1"
+    set "PATH=C:\Program Files\GTK3-Runtime Win64\bin;%PATH%"
+)
+
+IF NOT DEFINED GTK_OK (
+    echo.
+    echo  --------------------------------------------------------------
+    echo   WARNING: GTK runtime not detected.
+    echo   Trip management works, but downloading LR / Party Bill /
+    echo   Lorry Owner Bill PDFs will FAIL with a "cannot load library"
+    echo   error until GTK is installed.
+    echo.
+    echo   To enable PDF generation on Windows, install ONE of these:
+    echo.
+    echo    Option A (recommended): MSYS2
+    echo      1. Download and install: https://www.msys2.org/
+    echo      2. Open the "MSYS2 MINGW64" shell from the Start menu
+    echo      3. Run this one line:
+    echo           pacman -S mingw-w64-x86_64-pango mingw-w64-x86_64-gdk-pixbuf2 mingw-w64-x86_64-fontconfig
+    echo      4. Close all cmd windows and re-run this script.
+    echo.
+    echo    Option B: GTK3-Runtime standalone installer
+    echo      Download and install: https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
+    echo.
+    echo   Press any key to continue starting the app WITHOUT PDF support,
+    echo   or close this window (Ctrl+C) to install GTK first.
+    echo  --------------------------------------------------------------
+    pause
+) ELSE (
+    echo         GTK runtime ready -- PDF generation will work.
+)
+
+:: ── 4. Python venv + backend deps ────────────────────────
+echo  [4/7] Setting up Python virtual environment...
 IF EXIST ".venv\Scripts\python.exe" (
     echo         .venv already exists -- skipping creation.
 ) ELSE (
@@ -83,8 +129,8 @@ IF ERRORLEVEL 1 (
 )
 echo         Backend deps ready.
 
-:: ── 4. Frontend deps ─────────────────────────────────────
-echo  [4/6] Installing frontend npm packages...
+:: ── 5. Frontend deps ─────────────────────────────────────
+echo  [5/7] Installing frontend npm packages...
 IF EXIST "frontend\node_modules\" (
     echo         frontend\node_modules present -- skipping. Delete it to force reinstall.
 ) ELSE (
@@ -101,8 +147,8 @@ IF EXIST "frontend\node_modules\" (
     echo         Frontend deps installed.
 )
 
-:: ── 5. Init database (idempotent) ────────────────────────
-echo  [5/6] Initializing database...
+:: ── 6. Init database (idempotent) ────────────────────────
+echo  [6/7] Initializing database...
 ".venv\Scripts\python" -c "import database; database.init_db()"
 IF ERRORLEVEL 1 (
     echo  ERROR: Database initialization failed.
@@ -111,8 +157,8 @@ IF ERRORLEVEL 1 (
 )
 echo         trips.db ready.
 
-:: ── 6. Start servers in separate windows ─────────────────
-echo  [6/6] Starting servers...
+:: ── 7. Start servers in separate windows ─────────────────
+echo  [7/7] Starting servers...
 echo         Backend  -^> http://localhost:8001
 start "JB Transports - Backend"  cmd /k ".venv\Scripts\python backend\run.py"
 
