@@ -110,20 +110,16 @@
       </table>
     </td>
     <td style="width:14%;padding:0;">
-      <table class="grid inner" style="height:100%;">
-        <tr style="height:50%;">
-          <td class="center" style="vertical-align:middle;">
-            <div class="cell-hdr">From</div>
-            <div class="val">{{ inv.from_location | upper }}</div>
-          </td>
-        </tr>
-        <tr style="height:50%;">
-          <td class="center" style="vertical-align:middle;">
-            <div class="cell-hdr">To</div>
-            <div class="val">{{ inv.to_location | upper }}</div>
-          </td>
-        </tr>
-      </table>
+      <div style="display:flex;flex-direction:column;height:100%;">
+        <div style="flex:1 1 0;display:flex;flex-direction:column;justify-content:center;text-align:center;border-bottom:1px solid #111;padding:2pt;">
+          <div class="cell-hdr">From</div>
+          <div class="val">{{ inv.from_location | upper }}</div>
+        </div>
+        <div style="flex:1 1 0;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:2pt;">
+          <div class="cell-hdr">To</div>
+          <div class="val">{{ inv.to_location | upper }}</div>
+        </div>
+      </div>
     </td>
   </tr>
 </table>
