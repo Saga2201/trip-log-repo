@@ -31,11 +31,7 @@
     </td>
     <td style="width:22%;text-align:right;vertical-align:top;">
       {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
-      {% if _mobiles %}
-        {% for m in _mobiles %}
-          <div>{% if loop.first %}<span class="bold">Mobile :</span>{% endif %} {{ m }}</div>
-        {% endfor %}
-      {% endif %}
+      {% if _mobiles %}<div class="small"><span class="bold">Inquiry &amp; Helpline(24/7):</span> {{ _mobiles | join(', ') }}</div>{% endif %}
     </td>
   </tr>
 </table>
