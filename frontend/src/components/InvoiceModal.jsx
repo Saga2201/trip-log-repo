@@ -255,7 +255,6 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
                 <Field label="Bill/Invoice Date"><input type="date" value={form.lr_bill_invoice_date} onChange={set('lr_bill_invoice_date')} className={inputCls} /></Field>
                 <Field label="E-Way Bill No"><input value={form.lr_eway_bill_no} onChange={set('lr_eway_bill_no')} className={inputCls} /></Field>
                 <Field label="Demurrage After"><input value={form.lr_demurrage_after} onChange={set('lr_demurrage_after')} placeholder="e.g. 3 days" className={inputCls} /></Field>
-                <div className="sm:col-span-3"><Field label="Notice Text (auto if blank)"><input value={form.lr_notice_text} onChange={set('lr_notice_text')} placeholder="Leave blank to use default" className={inputCls} /></Field></div>
               </div>
             </div>
             <div className="border-t border-green-200 pt-4 mb-4">
