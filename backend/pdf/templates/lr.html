@@ -271,9 +271,9 @@
       <div class="small"><span class="bold">BRANCH OFFICE ADDRESS :</span> {{ company.branch_office_address }}</div>
       <div class="tiny" style="margin-top:6pt;color:#555;">This electronic generated pdf does not require any physical signature. Date : {{ inv.updated_at or inv.created_at or '' }}</div>
     </td>
-    <td style="width:30%;vertical-align:bottom;text-align:center;">
+    <td style="width:30%;vertical-align:bottom;text-align:center;padding-top:14mm;">
       <div class="bold small">FOR, {{ company.name | upper }}</div>
-      <div style="height:10mm;"></div>
+      <div style="height:4mm;"></div>
       <div class="bold small red">AUTHORIZE SIGNATURE</div>
     </td>
   </tr>
