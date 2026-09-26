@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { X, FileText, MapPin, Truck, CreditCard, Wrench, User } from 'lucide-react'
+import { X, FileText, MapPin, Truck, CreditCard, Wrench, User, Landmark } from 'lucide-react'
 import { getInvoice, createInvoice, updateInvoice, nextSerial, invoicePdfUrl, invoiceAllPdfsUrl } from '../api'
 
 const EMPTY = {
@@ -33,6 +33,13 @@ const EMPTY = {
   // LR receiving + remark
   lr_receiver_name: '', lr_receiver_number: '', lr_receiver_remark: '', lr_receiver_status: '',
   lr_remark: '',
+  // Bank details (auto-filled with company defaults; user can override per invoice)
+  bank_account_no: '8866719574',
+  bank_ifsc: 'KKBK302609',
+  bank_ac_holder: 'JB TRANSPORTS',
+  bank_name: 'KOTAK MAHINDRA BANK',
+  bank_pan_holder: 'ANKIT MAHADEVBHAI PAWAR',
+  bank_pan_number: 'DKCPP6873H',
   // Party Bill
   pb_bill_to_name: '', pb_bill_to_address: '',
   pb_freight: '', pb_hamali: '', pb_halting: '',
@@ -368,6 +375,18 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
               <Field label="Previous Balance"><input type="number" min="0" value={form.db_previous_balance} onChange={set('db_previous_balance')} className={inputCls} /></Field>
               <Field label="Advance Deposited"><input type="number" min="0" value={form.db_advance_deposited} onChange={set('db_advance_deposited')} className={inputCls} /></Field>
               <Field label="Collection (Vasuli)"><input type="number" min="0" value={form.db_collection} onChange={set('db_collection')} className={inputCls} /></Field>
+            </div>
+          </Section>
+
+          <Section icon={Landmark} title="Bank Details (LR footer)" color="blue">
+            <p className="text-xs text-blue-700 mb-3">💡 Pre-filled with company defaults. Edit here if this invoice should show different bank info; otherwise leave as-is.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field label="Bank Account No."><input value={form.bank_account_no} onChange={set('bank_account_no')} className={inputCls} /></Field>
+              <Field label="A/C Holder Name"><input value={form.bank_ac_holder} onChange={set('bank_ac_holder')} className={inputCls + ' uppercase'} /></Field>
+              <Field label="IFSC Code"><input value={form.bank_ifsc} onChange={set('bank_ifsc')} className={inputCls + ' uppercase'} /></Field>
+              <Field label="Bank Name"><input value={form.bank_name} onChange={set('bank_name')} className={inputCls + ' uppercase'} /></Field>
+              <Field label="PAN Card Name"><input value={form.bank_pan_holder} onChange={set('bank_pan_holder')} className={inputCls + ' uppercase'} /></Field>
+              <Field label="PAN Card Number"><input value={form.bank_pan_number} onChange={set('bank_pan_number')} className={inputCls + ' uppercase'} /></Field>
             </div>
           </Section>
 

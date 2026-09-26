@@ -15,13 +15,16 @@ COMPANY = {
     "transport_reg_no": "UDYAM-GJ-01-0650016",
     "pan": "AUWPB0355R",
     "gst": "24DKCPP6873H2ZS",
+    # Defaults shown in the New Invoice form's Bank Details section. Users can
+    # override any of these per invoice; the LR template uses inv.bank_* first,
+    # falling back to these constants only when the per-invoice field is blank.
     "bank": {
-        "account_no": "",
-        "ifsc": "",
-        "ac_holder": "JB Transports",
-        "bank_name": "",
-        "pan_holder": "",
-        "pan_number": "AUWPB0355R",
+        "account_no": "8866719574",
+        "ifsc": "KKBK302609",
+        "ac_holder": "JB TRANSPORTS",
+        "bank_name": "KOTAK MAHINDRA BANK",
+        "pan_holder": "ANKIT MAHADEVBHAI PAWAR",
+        "pan_number": "DKCPP6873H",
     },
     "logo_path": str(_LOGO_ABS),
     "logo_url": _LOGO_ABS.as_uri(),  # file:///... — WeasyPrint reads this from an <img src>

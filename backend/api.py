@@ -392,6 +392,13 @@ class InvoiceIn(BaseModel):
     lr_receiver_remark: str = ""
     lr_receiver_status: str = ""
     lr_remark: str = ""
+    # Bank details (per-invoice override; falls back to COMPANY defaults in template)
+    bank_account_no: str = ""
+    bank_ifsc: str = ""
+    bank_ac_holder: str = ""
+    bank_name: str = ""
+    bank_pan_holder: str = ""
+    bank_pan_number: str = ""
     # Party Bill
     pb_bill_to_name: str = ""
     pb_bill_to_address: str = ""

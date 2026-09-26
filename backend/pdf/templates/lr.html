@@ -231,21 +231,21 @@
         </tr>
         <tr>
           <td class="small" style="width:22%;">BANK ACCOUNT NO. :</td>
-          <td class="small bold" style="width:28%;">{{ company.bank.account_no }}</td>
+          <td class="small bold" style="width:28%;">{{ inv.bank_account_no or company.bank.account_no }}</td>
           <td class="small" style="width:22%;">A/C HOLDER NAME :</td>
-          <td class="small bold" style="width:28%;">{{ company.bank.ac_holder }}</td>
+          <td class="small bold" style="width:28%;">{{ inv.bank_ac_holder or company.bank.ac_holder }}</td>
         </tr>
         <tr>
           <td class="small">IFSC CODE :</td>
-          <td class="small bold">{{ company.bank.ifsc }}</td>
+          <td class="small bold">{{ inv.bank_ifsc or company.bank.ifsc }}</td>
           <td class="small">BANK NAME :</td>
-          <td class="small bold">{{ company.bank.bank_name }}</td>
+          <td class="small bold">{{ inv.bank_name or company.bank.bank_name }}</td>
         </tr>
         <tr>
           <td class="small">PAN CARD NAME :</td>
-          <td class="small bold">{{ company.bank.pan_holder or company.name }}</td>
+          <td class="small bold">{{ inv.bank_pan_holder or company.bank.pan_holder or company.name }}</td>
           <td class="small">PAN CARD NUMBER :</td>
-          <td class="small bold">{{ company.bank.pan_number or company.pan }}</td>
+          <td class="small bold">{{ inv.bank_pan_number or company.bank.pan_number or company.pan }}</td>
         </tr>
       </table>
       <div class="small" style="margin-top:4pt;">

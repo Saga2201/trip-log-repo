@@ -115,6 +115,12 @@ def init_db():
                 lr_receiver_remark TEXT DEFAULT '',
                 lr_receiver_status TEXT DEFAULT '',
                 lr_remark TEXT DEFAULT '',
+                bank_account_no TEXT DEFAULT '',
+                bank_ifsc TEXT DEFAULT '',
+                bank_ac_holder TEXT DEFAULT '',
+                bank_name TEXT DEFAULT '',
+                bank_pan_holder TEXT DEFAULT '',
+                bank_pan_number TEXT DEFAULT '',
                 pb_bill_to_name TEXT DEFAULT '',
                 pb_bill_to_address TEXT DEFAULT '',
                 pb_freight REAL DEFAULT 0,
@@ -157,6 +163,8 @@ def init_db():
             'lr_packaging_type', 'lr_material_name', 'lr_hsn_code',
             'lr_receiver_name', 'lr_receiver_number', 'lr_receiver_remark', 'lr_receiver_status',
             'lr_remark',
+            'bank_account_no', 'bank_ifsc', 'bank_ac_holder', 'bank_name',
+            'bank_pan_holder', 'bank_pan_number',
         ]
         for col in _text_cols:
             if col not in existing_inv:
@@ -282,6 +290,8 @@ _INVOICE_COLS = [
     "lr_other_charge", "lr_advance_amount",
     "lr_receiver_name", "lr_receiver_number", "lr_receiver_remark", "lr_receiver_status",
     "lr_remark",
+    "bank_account_no", "bank_ifsc", "bank_ac_holder", "bank_name",
+    "bank_pan_holder", "bank_pan_number",
     "pb_bill_to_name", "pb_bill_to_address",
     "pb_freight", "pb_hamali", "pb_halting",
     "db_driver_name", "db_driver_address", "db_driver_num", "db_driver_dl_number",
