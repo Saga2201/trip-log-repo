@@ -12,7 +12,7 @@ COMPANY = {
     "phones": ["7600224710"],
     "email": "jb.transport363@gmail.com",
     "website": "",
-    "transport_reg_no": "",
+    "transport_reg_no": "UDYAM-GJ-01-0650016",
     "pan": "AUWPB0355R",
     "gst": "24DKCPP6873H2ZS",
     "bank": {
