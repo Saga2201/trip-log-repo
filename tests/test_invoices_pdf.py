@@ -96,4 +96,5 @@ def test_driver_bill_pdf_contains_key_fields():
     assert "Rahish Singh" in text
     assert "Shri Meladi Mata" in text
     assert "12,000" in text            # balance_fare
-    assert "Driver's Signature" in text
+    assert "DRIVER'S SIGNATURE" in text.upper()
+    assert "LORRY OWNER BILL" in text

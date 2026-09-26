@@ -178,7 +178,7 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
         >
           <a href={invoicePdfUrl(downloadOpen.id, 'lr')} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50">Download LR</a>
           <a href={invoicePdfUrl(downloadOpen.id, 'party_bill')} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50">Download Party Bill</a>
-          <a href={invoicePdfUrl(downloadOpen.id, 'driver_bill')} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50">Download Driver Bill</a>
+          <a href={invoicePdfUrl(downloadOpen.id, 'driver_bill')} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50">Download Lorry Owner Bill</a>
           <a href={invoiceAllPdfsUrl(downloadOpen.id)} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50 border-t border-gray-100 font-semibold">All 3 (ZIP)</a>
         </div>
       )}

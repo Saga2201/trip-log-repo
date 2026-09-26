@@ -392,7 +392,7 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
             </details>
           </Section>
 
-          <Section icon={User} title="Driver Bill Details" color="yellow">
+          <Section icon={User} title="Lorry Owner Bill Details" color="yellow">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <Field label="Driver Name"><input value={form.db_driver_name} onChange={set('db_driver_name')} className={inputCls} /></Field>
               <Field label="Driver Number"><input type="tel" inputMode="numeric" maxLength={10} value={form.db_driver_num} onChange={e => setVal('db_driver_num', e.target.value.replace(/\D/g,'').slice(0,10))} className={inputCls} /></Field>
@@ -435,7 +435,7 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
               </div>
               <div className="flex flex-wrap gap-2">
                 <a href={invoicePdfUrl(savedId, 'party_bill')} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">Party Bill</a>
-                <a href={invoicePdfUrl(savedId, 'driver_bill')} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">Driver Bill</a>
+                <a href={invoicePdfUrl(savedId, 'driver_bill')} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white border border-green-300 text-sm hover:bg-green-100">Lorry Owner Bill</a>
                 <a href={invoiceAllPdfsUrl(savedId)} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-navy text-white text-sm hover:bg-navy-light font-semibold">All (ZIP)</a>
               </div>
             </div>

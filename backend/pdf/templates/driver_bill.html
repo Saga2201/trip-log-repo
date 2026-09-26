@@ -1,76 +1,180 @@
 <!doctype html>
-<html><head><meta charset="utf-8"><title>Driver Bill {{ inv.serial_number }}</title></head>
+<html><head><meta charset="utf-8"><title>Lorry Owner Bill {{ inv.serial_number }}</title>
+<style>
+  @page { size: A4 portrait; margin: 10mm 10mm; }
+  body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; line-height: 1.25; color: #111; }
+  .red { color: #d00; }
+  .u { text-decoration: underline; }
+  .bold { font-weight: bold; }
+  .small { font-size: 9pt; }
+  .tiny { font-size: 8pt; }
+  .center { text-align: center; }
+  .right { text-align: right; }
+  table.grid { border-collapse: collapse; width: 100%; }
+  table.grid td, table.grid th { border: 1px solid #111; padding: 4pt 6pt; vertical-align: top; }
+  table.grid th { background: #f2f2f2; font-weight: bold; font-size: 9pt; text-align: center; }
+  .cell-hdr { color: #d00; font-weight: bold; }
+  .kv-label { color: #333; font-size: 8.5pt; }
+</style>
+</head>
 <body>
 
-<table style="margin-bottom:4px;">
+<!-- Top strip: logo | jurisdiction + LORRY OWNER BILL title | mobile -->
+<table style="width:100%;margin-bottom:4pt;">
   <tr>
-    <td style="width:60%;vertical-align:middle;">
-      <img src="{{ company.logo_url }}" style="height:28mm;width:auto;" alt="{{ company.name }}" />
+    <td style="width:22%;vertical-align:top;">
+      <img src="{{ company.logo_url }}" style="height:22mm;width:auto;" alt="{{ company.name }}" />
     </td>
-    <td class="right small" style="vertical-align:top;">
+    <td style="width:56%;text-align:center;vertical-align:top;">
+      <div class="small u">SUBJECT TO {{ company.jurisdiction | upper }} JURISDICTION</div>
+      <div class="bold" style="font-size:20pt;margin-top:2pt;">LORRY OWNER BILL</div>
+    </td>
+    <td style="width:22%;text-align:right;vertical-align:top;">
       {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
-      {% if _mobiles %}<div>Mobile: {{ _mobiles | join(', ') }}</div>{% endif %}
-      <div style="margin-top:4px;display:flex;justify-content:flex-end;"><div class="qr-slot"></div></div>
+      {% if _mobiles %}
+        {% for m in _mobiles %}
+          <div>{% if loop.first %}<span class="bold">Mobile :</span>{% endif %} {{ m }}</div>
+        {% endfor %}
+      {% endif %}
     </td>
   </tr>
 </table>
 
-<div class="center bold" style="border-top:1px solid #111;border-bottom:1px solid #111;padding:2pt 0;margin-bottom:6pt;font-size:14pt;">DRIVER BILL</div>
-
-<table class="hair" style="margin-bottom:4px;">
-  <tr>
-    <td>No./AMD/ <span class="bold">{{ inv.serial_number }}</span></td>
-    <td>Date: <span class="bold">{{ inv.date }}</span></td>
-  </tr>
-</table>
-
-<table style="margin-bottom:4px;">
-  <tr>
-    <td style="width:60%;border:1px solid #111;padding:6pt;vertical-align:top;">
-      <div>Truck No: <span class="bold">{{ inv.vehicle_number }}</span></div>
-      <div>Driver / Owner Name: <span class="bold">{{ inv.db_driver_name }}</span></div>
-      <div>Address: <span class="bold">{{ inv.db_driver_address }}</span></div>
-      <div>Phone (Owner): <span class="bold">{{ inv.db_owner_phone }}</span></div>
-      <div>Transport Party: <span class="bold">{{ inv.db_transport_party }}</span></div>
-    </td>
-    <td style="width:40%;border:1px solid #111;padding:6pt;vertical-align:top;">
-      <div style="display:flex;justify-content:space-between;"><span>Total Advance:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Previous Balance:</span><span class="bold">{{ inv.db_previous_balance | format_inr if inv.db_previous_balance else '—' }}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Advance Total:</span><span class="bold">{{ inv.db_advance | format_inr }}</span></div>
-      <div style="display:flex;justify-content:space-between;" class="bold"><span>Balance Fare:</span><span>{{ inv.db_balance_fare | format_inr }}</span></div>
-      <div style="display:flex;justify-content:space-between;"><span>Advance Deposited:</span><span>{{ inv.db_advance_deposited | format_inr if inv.db_advance_deposited else '—' }}</span></div>
-    </td>
-  </tr>
-</table>
-
-<table class="hair" style="margin-bottom:4px;">
-  <thead>
-    <tr>
-      <th>Fare</th><th>Advance</th><th>Balance Fare</th><th>Collection</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="right">{{ inv.db_fare | format_inr }}</td>
-      <td class="right">{{ inv.db_advance | format_inr }}</td>
-      <td class="right">{{ inv.db_balance_fare | format_inr }}</td>
-      <td class="right">{{ inv.db_collection | format_inr if inv.db_collection else '—' }}</td>
-    </tr>
-  </tbody>
-</table>
-
-<div class="small" style="margin-bottom:12pt;">
-  <div class="bold">Notes:</div>
-  <div>1) If the vehicle is delayed, inform the party immediately.</div>
-  <div>2) Responsibility for delay lies with the vehicle owner / driver.</div>
-  <div>3) If return fare is not received within 15 days, balance fare will not be paid.</div>
+<!-- Company name + address + reg/email/gstin -->
+<div class="red bold" style="font-size:16pt;">{{ company.name | upper }}</div>
+<div class="small">{{ company.address }}</div>
+<div class="small" style="margin-top:2pt;">
+  {% if company.transport_reg_no %}<span class="bold">Transport Reg No :</span> {{ company.transport_reg_no }},{% endif %}
+  {% if company.email %} <span class="bold">Email id :</span> {{ company.email }},{% endif %}
+  <span class="bold">GSTIN No. :</span> {{ company.gst }}
 </div>
 
-<table style="margin-top:20pt;">
+<div style="border-top:1px solid #111;margin-top:6pt;"></div>
+
+<!-- Bill no / date -->
+<table style="width:100%;margin-top:4pt;margin-bottom:4pt;">
   <tr>
-    <td class="center"><div style="border-top:1px solid #111;padding-top:2pt;width:180pt;">Driver's Signature</div></td>
-    <td class="center right"><div style="border-top:1px solid #111;padding-top:2pt;width:180pt;margin-left:auto;">Partner</div></td>
+    <td class="bold"> LORRY OWNER BILL NO. : {{ inv.serial_number }}</td>
+    <td class="bold right">Date : {{ inv.date }}</td>
   </tr>
 </table>
+
+<!-- Driver / Owner block -->
+<table class="grid" style="margin-bottom:0;">
+  <tr>
+    <th colspan="4" style="background:#f5f5ff;color:#d00;text-align:left;">DRIVER / OWNER DETAILS</th>
+  </tr>
+  <tr>
+    <td style="width:25%;" class="small"><div class="kv-label">DRIVER NAME</div><div class="bold">{{ inv.db_driver_name }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">DRIVER NUMBER</div><div class="bold">{{ inv.db_driver_num }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">DL NUMBER</div><div class="bold">{{ inv.db_driver_dl_number }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">OWNER NAME</div><div class="bold">{{ inv.db_owner_name }}</div></td>
+  </tr>
+  <tr>
+    <td class="small"><div class="kv-label">OWNER PHONE</div><div class="bold">{{ inv.db_owner_phone }}</div></td>
+    <td colspan="2" class="small"><div class="kv-label">DRIVER ADDRESS</div><div class="bold">{{ inv.db_driver_address }}</div></td>
+    <td class="small"><div class="kv-label">TRANSPORT PARTY</div><div class="bold">{{ inv.db_transport_party }}</div></td>
+  </tr>
+</table>
+
+<!-- TRIP DETAILS block -->
+<table class="grid" style="margin-top:0;border-top:none;">
+  <tr>
+    <th colspan="4" style="background:#f5f5ff;color:#d00;text-align:left;">TRIP DETAILS</th>
+  </tr>
+  <tr>
+    <td style="width:25%;" class="small"><div class="kv-label">DATE / LR / BILTY NUMBER</div><div class="bold">{{ inv.date }} / {{ inv.lr_bilty_no or inv.serial_number }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">VEHICLE NO.</div><div class="bold">{{ inv.vehicle_number }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">PARTY BILL / INVOICE NO.</div><div class="bold">{{ inv.lr_ref_invoice_no }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">HSN / SAC</div><div class="bold">{{ inv.lr_hsn_code }}</div></td>
+  </tr>
+  <tr>
+    <td colspan="2" class="small"><div class="kv-label">FROM &mdash; TO</div><div class="bold">{{ inv.from_location }} &mdash; {{ inv.to_location }}</div></td>
+    <td class="small"><div class="kv-label">MATERIAL NAME</div><div class="bold">{{ inv.lr_material_name or inv.lr_description }}</div></td>
+    <td class="small">
+      <div class="kv-label">PARTICULAR</div>
+      {% if inv.lr_rate %}<div class="bold">RATE : {{ inv.lr_rate | format_inr }} / MT</div>{% endif %}
+      {% if inv.lr_weight_charged %}<div class="bold">WEIGHT : {{ '%.2f' % inv.lr_weight_charged }} MT</div>{% endif %}
+    </td>
+  </tr>
+</table>
+
+<!-- SETTLEMENT SUMMARY block -->
+<table class="grid" style="margin-top:0;border-top:none;">
+  <tr>
+    <th style="background:#f5f5ff;color:#d00;text-align:left;">SETTLEMENT SUMMARY</th>
+    <th style="width:25%;background:#f5f5ff;color:#d00;text-align:right;">AMOUNT (₹)</th>
+  </tr>
+  <tr>
+    <td>Fare <span class="tiny" style="color:#666;">(agreed with driver / owner)</span></td>
+    <td class="bold right">{{ inv.db_fare | format_inr if inv.db_fare else '0' }}</td>
+  </tr>
+  <tr>
+    <td>Advance Paid</td>
+    <td class="bold right">{{ inv.db_advance | format_inr if inv.db_advance else '0' }}</td>
+  </tr>
+  <tr style="background:#f5f5ff;">
+    <td class="bold">BALANCE FARE <span class="tiny" style="color:#666;font-weight:normal;">(Fare &minus; Advance)</span></td>
+    <td class="bold right">{{ '%.2f' % inv.db_balance_fare if inv.db_balance_fare else '0.00' }}</td>
+  </tr>
+  <tr>
+    <td>Collection (Vasuli)</td>
+    <td class="bold right">{{ inv.db_collection | format_inr if inv.db_collection else '0' }}</td>
+  </tr>
+  <tr>
+    <td>Previous Balance</td>
+    <td class="bold right">{{ inv.db_previous_balance | format_inr if inv.db_previous_balance else '0' }}</td>
+  </tr>
+  <tr>
+    <td>Advance Deposited</td>
+    <td class="bold right">{{ inv.db_advance_deposited | format_inr if inv.db_advance_deposited else '0' }}</td>
+  </tr>
+  <tr style="background:#eef7ee;">
+    <td class="bold" style="color:#0a6;">NET PAYABLE TO DRIVER / OWNER</td>
+    <td class="bold right" style="color:#0a6;font-size:11pt;">{{ inv.db_balance_fare | format_inr if inv.db_balance_fare else '0' }}</td>
+  </tr>
+</table>
+
+<!-- Amount in words -->
+<table class="grid" style="margin-top:0;border-top:none;">
+  <tr>
+    <td style="width:18%;" class="small"><span class="bold">AMOUNT IN WORDS</span></td>
+    <td class="bold">{{ inv.db_balance_fare | inr_words }}.</td>
+  </tr>
+</table>
+
+<!-- Bottom: Notes | Bank details | Signature -->
+<table class="grid" style="margin-top:8pt;">
+  <tr>
+    <td style="width:34%;" class="small">
+      <div class="cell-hdr" style="margin-bottom:3pt;">NOTES</div>
+      <div class="tiny">1. If the vehicle is delayed, inform the party immediately.</div>
+      <div class="tiny" style="margin-top:2pt;">2. Responsibility for delay lies with the vehicle owner / driver.</div>
+      <div class="tiny" style="margin-top:2pt;">3. If return fare is not received within 15 days, balance fare will not be paid.</div>
+    </td>
+    <td style="width:36%;" class="small">
+      <div class="cell-hdr" style="margin-bottom:3pt;">BANK DETAILS</div>
+      <div><span class="bold">A/C NAME :</span> <span class="bold">{{ inv.bank_ac_holder or company.bank.ac_holder or company.name }}</span></div>
+      <div><span class="bold">A/C NUMBER :</span> <span class="bold">{{ inv.bank_account_no or company.bank.account_no }}</span></div>
+      <div><span class="bold">IFSC CODE :</span> <span class="bold">{{ inv.bank_ifsc or company.bank.ifsc }}</span></div>
+      <div><span class="bold">BANK NAME :</span> <span class="bold">{{ inv.bank_name or company.bank.bank_name }}</span></div>
+      <div><span class="bold">PAN NUMBER :</span> <span class="bold">{{ inv.bank_pan_number or company.bank.pan_number or company.pan }}</span></div>
+    </td>
+    <td style="width:30%;text-align:center;vertical-align:bottom;">
+      <div class="bold">FOR , {{ company.name | upper }}</div>
+      <div class="bold small" style="margin-top:2pt;">(AUTHORIZED SIGNATORY)</div>
+    </td>
+  </tr>
+</table>
+
+<!-- Driver's signature strip -->
+<table style="width:100%;margin-top:20pt;">
+  <tr>
+    <td class="center small" style="width:50%;"><div style="border-top:1px solid #111;padding-top:2pt;width:60mm;margin:0 auto;"><span class="bold">DRIVER'S SIGNATURE</span></div></td>
+    <td class="center small" style="width:50%;"><div style="border-top:1px solid #111;padding-top:2pt;width:60mm;margin:0 auto;"><span class="bold">PARTNER</span></div></td>
+  </tr>
+</table>
+
+<div class="tiny" style="margin-top:6pt;color:#555;">This electronic generated pdf does not require any physical signature. Date : {{ inv.updated_at or inv.created_at or '' }}</div>
 
 </body></html>
