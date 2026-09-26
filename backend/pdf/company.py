@@ -1,4 +1,4 @@
-"""Static company info used across all invoice PDF templates."""
+
 from pathlib import Path
 
 _LOGO_ABS = Path(__file__).parent / "assets" / "jb_logo.png"
@@ -20,7 +20,7 @@ COMPANY = {
     # falling back to these constants only when the per-invoice field is blank.
     "bank": {
         "account_no": "8866719574",
-        "ifsc": "KKBK302609",
+        "ifsc": "KKBK0002609",
         "ac_holder": "JB TRANSPORTS",
         "bank_name": "KOTAK MAHINDRA BANK",
         "pan_holder": "ANKIT MAHADEVBHAI PAWAR",

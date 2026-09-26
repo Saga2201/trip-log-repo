@@ -35,7 +35,7 @@ const EMPTY = {
   lr_remark: '',
   // Bank details (auto-filled with company defaults; user can override per invoice)
   bank_account_no: '8866719574',
-  bank_ifsc: 'KKBK302609',
+  bank_ifsc: 'KKBK0002609',
   bank_ac_holder: 'JB TRANSPORTS',
   bank_name: 'KOTAK MAHINDRA BANK',
   bank_pan_holder: 'ANKIT MAHADEVBHAI PAWAR',
@@ -103,7 +103,17 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
     if (invoiceId) {
       getInvoice(invoiceId).then(inv => {
         const next = { ...EMPTY }
-        Object.keys(EMPTY).forEach(k => { next[k] = inv[k] ?? EMPTY[k]; if (NUMERIC.has(k)) next[k] = inv[k] != null ? String(inv[k]) : '' })
+        // Use || (not ??) so empty strings from the DB fall back to EMPTY
+        // defaults — critical for the bank fields and the two radio defaults
+        // (lr_service_tax_payable_by, lr_insurance_risk) which have non-empty
+        // starting values in EMPTY.
+        Object.keys(EMPTY).forEach(k => {
+          if (NUMERIC.has(k)) {
+            next[k] = inv[k] != null ? String(inv[k]) : ''
+          } else {
+            next[k] = inv[k] || EMPTY[k]
+          }
+        })
         setForm(next)
         setSerialPreview(inv.serial_number)
       })
