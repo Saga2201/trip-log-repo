@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { FileText, Search, X as XIcon, Edit2, Download, Trash2, Eye } from 'lucide-react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { FileText, Search, X as XIcon, Edit2, Download, Trash2 } from 'lucide-react'
 import { getInvoices, deleteInvoice, invoicePdfUrl, invoiceAllPdfsUrl } from '../api'
 import { KpiCard } from '../components/KpiCard'
 import { ConfirmDialog } from '../components/ConfirmDialog'
@@ -11,7 +11,38 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [confirm, setConfirm] = useState(null)
-  const [downloadOpen, setDownloadOpen] = useState(null)  // invoice id whose menu is open
+  const [downloadOpen, setDownloadOpen] = useState(null)  // { id, top, left, width } or null
+  const dropdownRef = useRef(null)
+
+  // Close dropdown on outside click, Escape, scroll, or resize
+  useEffect(() => {
+    if (!downloadOpen) return
+    const onDocClick = (e) => {
+      // If the click is on the dropdown itself, leave it open (link clicks are allowed).
+      if (dropdownRef.current && dropdownRef.current.contains(e.target)) return
+      // If the click is on the trigger button (data attr), it will toggle itself.
+      if (e.target.closest('[data-download-trigger]')) return
+      setDownloadOpen(null)
+    }
+    const onKey = (e) => { if (e.key === 'Escape') setDownloadOpen(null) }
+    const onScrollOrResize = () => setDownloadOpen(null)
+    document.addEventListener('mousedown', onDocClick)
+    document.addEventListener('keydown', onKey)
+    window.addEventListener('scroll', onScrollOrResize, true)  // capture scroll on any ancestor
+    window.addEventListener('resize', onScrollOrResize)
+    return () => {
+      document.removeEventListener('mousedown', onDocClick)
+      document.removeEventListener('keydown', onKey)
+      window.removeEventListener('scroll', onScrollOrResize, true)
+      window.removeEventListener('resize', onScrollOrResize)
+    }
+  }, [downloadOpen])
+
+  const toggleDownload = (id, e) => {
+    if (downloadOpen && downloadOpen.id === id) { setDownloadOpen(null); return }
+    const r = e.currentTarget.getBoundingClientRect()
+    setDownloadOpen({ id, top: r.bottom + 4, left: Math.max(8, r.right - 180), width: 180 })
+  }
 
   const load = () => {
     setLoading(true)
@@ -114,25 +145,18 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
                     <td className="px-4 py-3 text-gray-500">{[i.from_location, i.to_location].filter(Boolean).join(' → ') || '—'}</td>
                     <td className="px-4 py-3 text-right font-semibold">{fmt(i.pb_amount_total)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1 relative">
+                      <div className="flex items-center gap-1">
                         <button title="View / Edit" onClick={() => onEditInvoice(i.id)} className="p-1.5 rounded hover:bg-blue-100 text-blue-600">
                           <Edit2 size={15} />
                         </button>
                         <button
+                          data-download-trigger
                           title="Download PDFs"
-                          onClick={() => setDownloadOpen(downloadOpen === i.id ? null : i.id)}
+                          onClick={(e) => toggleDownload(i.id, e)}
                           className="p-1.5 rounded hover:bg-green-100 text-green-600"
                         >
                           <Download size={15} />
                         </button>
-                        {downloadOpen === i.id && (
-                          <div className="absolute right-0 top-full mt-1 z-10 bg-white border border-gray-200 rounded-lg shadow-lg text-xs min-w-[160px]">
-                            <a href={invoicePdfUrl(i.id, 'lr')} target="_blank" rel="noopener noreferrer" className="block px-3 py-2 hover:bg-gray-50">Download LR</a>
-                            <a href={invoicePdfUrl(i.id, 'party_bill')} target="_blank" rel="noopener noreferrer" className="block px-3 py-2 hover:bg-gray-50">Download Party Bill</a>
-                            <a href={invoicePdfUrl(i.id, 'driver_bill')} target="_blank" rel="noopener noreferrer" className="block px-3 py-2 hover:bg-gray-50">Download Driver Bill</a>
-                            <a href={invoiceAllPdfsUrl(i.id)} target="_blank" rel="noopener noreferrer" className="block px-3 py-2 hover:bg-gray-50 border-t border-gray-100 font-semibold">All 3 (ZIP)</a>
-                          </div>
-                        )}
                         <button title="Delete" onClick={() => setConfirm({ id: i.id, serial: i.serial_number })} className="p-1.5 rounded hover:bg-red-100 text-red-500">
                           <Trash2 size={15} />
                         </button>
@@ -145,6 +169,19 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
           </div>
         )}
       </div>
+
+      {downloadOpen && (
+        <div
+          ref={dropdownRef}
+          style={{ position: 'fixed', top: downloadOpen.top, left: downloadOpen.left, width: downloadOpen.width, zIndex: 50 }}
+          className="bg-white border border-gray-200 rounded-lg shadow-lg text-xs"
+        >
+          <a href={invoicePdfUrl(downloadOpen.id, 'lr')} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50">Download LR</a>
+          <a href={invoicePdfUrl(downloadOpen.id, 'party_bill')} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50">Download Party Bill</a>
+          <a href={invoicePdfUrl(downloadOpen.id, 'driver_bill')} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50">Download Driver Bill</a>
+          <a href={invoiceAllPdfsUrl(downloadOpen.id)} target="_blank" rel="noopener noreferrer" onClick={() => setDownloadOpen(null)} className="block px-3 py-2 hover:bg-gray-50 border-t border-gray-100 font-semibold">All 3 (ZIP)</a>
+        </div>
+      )}
 
       <ConfirmDialog
         open={!!confirm}
