@@ -10,7 +10,7 @@ COMPANY = {
     "branch_office_address": "Survey No 711, Shiv Parking 1, Aslali Ring Road, Daskroi, Aslali, Ahmedabad 382427",
     "jurisdiction": "Ahmedabad",
     "phones": ["7600224710"],
-    "email": "",
+    "email": "jb.transport363@gmail.com",
     "website": "",
     "transport_reg_no": "",
     "pan": "AUWPB0355R",
