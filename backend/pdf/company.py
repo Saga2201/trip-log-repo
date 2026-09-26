@@ -5,9 +5,9 @@ _LOGO_ABS = Path(__file__).parent / "assets" / "jb_logo.png"
 
 COMPANY = {
     "name": "JB Transports",
-    "tagline": "Transport Services Full Load and Part Load Service All Over India",
-    "address": "201, Shine Swasti, Nr. Godrej Garden City, Gota, Ahmedabad-382470",
-    "branch_office_address": "201, Shine Swasti, Nr. Godrej Garden City, Gota, Ahmedabad-382470",
+    "tagline": "Service All Over India and All Types of Vehicle",
+    "address": "Survey No 711, Shiv Parking 1, Aslali Ring Road, Daskroi, Aslali, Ahmedabad 382427",
+    "branch_office_address": "Survey No 711, Shiv Parking 1, Aslali Ring Road, Daskroi, Aslali, Ahmedabad 382427",
     "jurisdiction": "Ahmedabad",
     "phones": ["7600224710"],
     "email": "",
