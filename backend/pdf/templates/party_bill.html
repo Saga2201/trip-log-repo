@@ -1,19 +1,20 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><title>Bill Invoice {{ inv.serial_number }}</title>
 <style>
-  @page { size: A4 landscape; margin: 6mm 8mm; }
-  body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 9pt; line-height: 1.2; color: #111; }
+  @page { size: A4 portrait; margin: 10mm 10mm; }
+  body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; line-height: 1.25; color: #111; }
   .red { color: #d00; }
   .u { text-decoration: underline; }
   .bold { font-weight: bold; }
-  .small { font-size: 8pt; }
-  .tiny { font-size: 7pt; }
+  .small { font-size: 9pt; }
+  .tiny { font-size: 8pt; }
   .center { text-align: center; }
   .right { text-align: right; }
   table.grid { border-collapse: collapse; width: 100%; }
-  table.grid td, table.grid th { border: 1px solid #111; padding: 3pt 4pt; vertical-align: top; }
-  table.grid th { background: #f2f2f2; font-weight: bold; font-size: 7.5pt; text-align: center; }
+  table.grid td, table.grid th { border: 1px solid #111; padding: 4pt 6pt; vertical-align: top; }
+  table.grid th { background: #f2f2f2; font-weight: bold; font-size: 9pt; text-align: center; }
   .cell-hdr { color: #d00; font-weight: bold; }
+  .kv-label { color: #333; font-size: 8.5pt; }
 </style>
 </head>
 <body>
@@ -21,12 +22,12 @@
 <!-- Top strip: logo | jurisdiction + BILL INVOICE title | mobile -->
 <table style="width:100%;margin-bottom:4pt;">
   <tr>
-    <td style="width:18%;vertical-align:top;">
-      <img src="{{ company.logo_url }}" style="height:18mm;width:auto;" alt="{{ company.name }}" />
+    <td style="width:22%;vertical-align:top;">
+      <img src="{{ company.logo_url }}" style="height:22mm;width:auto;" alt="{{ company.name }}" />
     </td>
-    <td style="width:60%;text-align:center;vertical-align:top;">
+    <td style="width:56%;text-align:center;vertical-align:top;">
       <div class="small u">SUBJECT TO {{ company.jurisdiction | upper }} JURISDICTION</div>
-      <div class="bold" style="font-size:18pt;margin-top:2pt;">BILL INVOICE</div>
+      <div class="bold" style="font-size:20pt;margin-top:2pt;">BILL INVOICE</div>
     </td>
     <td style="width:22%;text-align:right;vertical-align:top;">
       {% set _mobiles = ([inv.mobile1, inv.mobile2] | select | list) %}
@@ -40,127 +41,146 @@
 </table>
 
 <!-- Company name + address + reg/email/gstin -->
-<div class="red bold" style="font-size:15pt;">{{ company.name | upper }}</div>
+<div class="red bold" style="font-size:16pt;">{{ company.name | upper }}</div>
 <div class="small">{{ company.address }}</div>
-<div class="small">
-  {% if company.transport_reg_no %}<span class="bold">Transport Reg No :</span>{{ company.transport_reg_no }},{% endif %}
+<div class="small" style="margin-top:2pt;">
+  {% if company.transport_reg_no %}<span class="bold">Transport Reg No :</span> {{ company.transport_reg_no }},{% endif %}
   {% if company.email %} <span class="bold">Email id :</span> {{ company.email }},{% endif %}
   <span class="bold">GSTIN No. :</span> {{ company.gst }}
 </div>
 
-<div style="border-top:1px solid #111;margin-top:4pt;"></div>
+<div style="border-top:1px solid #111;margin-top:6pt;"></div>
 
 <!-- Bill invoice no / date -->
-<table style="width:100%;margin-top:2pt;margin-bottom:2pt;">
+<table style="width:100%;margin-top:4pt;margin-bottom:4pt;">
   <tr>
-    <td class="bold small"> BILL INVOICE NO. : {{ inv.serial_number }}</td>
-    <td class="bold small right">Date : {{ inv.date }}</td>
+    <td class="bold"> BILL INVOICE NO. : {{ inv.serial_number }}</td>
+    <td class="bold right">Date : {{ inv.date }}</td>
   </tr>
 </table>
 
 <!-- Billed to block -->
-<div class="small"><span class="bold">BILLED TO :</span> <span class="bold">{{ inv.pb_bill_to_name or inv.consignor_name }}</span></div>
-<div class="small"><span class="bold">ADDRESS :</span> {{ inv.pb_bill_to_address or inv.consignor_address }}</div>
-<div class="small"><span class="bold">GSTIN :</span> <span class="bold">{{ inv.pb_bill_to_gstin or inv.consignor_gstin }}</span></div>
-
-<!-- Line item table (12 columns) -->
-<table class="grid" style="margin-top:4pt;">
-  <thead>
-    <tr>
-      <th style="width:7%;">DATE / LR / BILTY NUMBER</th>
-      <th style="width:9%;">VEHICLE NO. / PARTY BILL / INVOICE NO.</th>
-      <th style="width:11%;">FROM -TO</th>
-      <th style="width:9%;">PARTICULAR</th>
-      <th style="width:8%;">MATERIAL NAME</th>
-      <th style="width:7%;">FREIGHT AMOUNT</th>
-      <th style="width:7%;">HALTING CHARGES</th>
-      <th style="width:11%;">OTHERS CHARGES</th>
-      <th style="width:7%;">DEDUCTION AMOUNT</th>
-      <th style="width:8%;">TRIP AMOUNT</th>
-      <th style="width:8%;">ADVANCE AMOUNT</th>
-      <th style="width:8%;">BALANCE AMOUNT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="bold small">
-        {{ inv.date }}<br/>
-        {{ inv.lr_bilty_no or inv.serial_number }}
-      </td>
-      <td class="bold small">
-        {{ inv.vehicle_number }}<br/>
-        {{ inv.lr_ref_invoice_no }}
-      </td>
-      <td class="bold small">{{ inv.from_location }} - {{ inv.to_location }}</td>
-      <td class="bold small">
-        {% if inv.lr_rate %}RATE - {{ inv.lr_rate | format_inr }} / MT<br/>{% endif %}
-        {% if inv.lr_weight_charged %}WEIGHT - {{ '%.2f' % inv.lr_weight_charged }} MT{% endif %}
-      </td>
-      <td class="bold small">{{ inv.lr_material_name or inv.lr_description }}</td>
-      <td class="bold small right">{{ inv.lr_freight_total | format_inr if inv.lr_freight_total else 0 }}</td>
-      <td class="bold small right">{{ inv.lr_halting_charge | format_inr if inv.lr_halting_charge else 0 }}</td>
-      <td class="bold small right">
-        {{ inv.pb_others_charges | format_inr if inv.pb_others_charges else 0 }}
-        {% set _parts = [] %}
-        {% if inv.lr_load_unload_charge %}{% set _ = _parts.append('Load/Unload=' ~ (inv.lr_load_unload_charge | format_inr)) %}{% endif %}
-        {% if inv.lr_bilty_charge %}{% set _ = _parts.append('Bilty=' ~ (inv.lr_bilty_charge | format_inr)) %}{% endif %}
-        {% if inv.lr_other_charge %}{% set _ = _parts.append('Other=' ~ (inv.lr_other_charge | format_inr)) %}{% endif %}
-        {% if _parts %}<div class="tiny">({{ _parts | join(', ') }})</div>{% endif %}
-      </td>
-      <td class="bold small right">{{ inv.pb_deduction_amount | format_inr if inv.pb_deduction_amount else 0 }}</td>
-      <td class="bold small right">{{ inv.pb_trip_amount | format_inr if inv.pb_trip_amount else 0 }}</td>
-      <td class="bold small right">{{ inv.lr_advance_amount | format_inr if inv.lr_advance_amount else 0 }}</td>
-      <td class="bold small right">{{ inv.pb_balance_amount | format_inr if inv.pb_balance_amount else 0 }}</td>
-    </tr>
-  </tbody>
+<table class="grid" style="margin-bottom:6pt;">
+  <tr>
+    <td style="width:15%;" class="small"><span class="bold">BILLED TO</span></td>
+    <td class="bold">{{ inv.pb_bill_to_name or inv.consignor_name }}</td>
+  </tr>
+  <tr>
+    <td class="small"><span class="bold">ADDRESS</span></td>
+    <td class="small">{{ inv.pb_bill_to_address or inv.consignor_address }}</td>
+  </tr>
+  <tr>
+    <td class="small"><span class="bold">GSTIN</span></td>
+    <td class="bold">{{ inv.pb_bill_to_gstin or inv.consignor_gstin }}</td>
+  </tr>
 </table>
 
-<!-- HSN + Remarks + Amount-in-words on the left, totals on the right -->
+<!-- TRIP DETAILS block -->
+<table class="grid" style="margin-bottom:0;">
+  <tr>
+    <th colspan="4" style="background:#f5f5ff;color:#d00;text-align:left;">TRIP DETAILS</th>
+  </tr>
+  <tr>
+    <td style="width:25%;" class="small"><div class="kv-label">DATE / LR / BILTY NUMBER</div><div class="bold">{{ inv.date }} / {{ inv.lr_bilty_no or inv.serial_number }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">VEHICLE NO.</div><div class="bold">{{ inv.vehicle_number }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">PARTY BILL / INVOICE NO.</div><div class="bold">{{ inv.lr_ref_invoice_no }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">HSN / SAC</div><div class="bold">{{ inv.lr_hsn_code }}</div></td>
+  </tr>
+  <tr>
+    <td colspan="2" class="small"><div class="kv-label">FROM &mdash; TO</div><div class="bold">{{ inv.from_location }} &mdash; {{ inv.to_location }}</div></td>
+    <td class="small"><div class="kv-label">MATERIAL NAME</div><div class="bold">{{ inv.lr_material_name or inv.lr_description }}</div></td>
+    <td class="small">
+      <div class="kv-label">PARTICULAR</div>
+      {% if inv.lr_rate %}<div class="bold">RATE : {{ inv.lr_rate | format_inr }} / MT</div>{% endif %}
+      {% if inv.lr_weight_charged %}<div class="bold">WEIGHT : {{ '%.2f' % inv.lr_weight_charged }} MT</div>{% endif %}
+    </td>
+  </tr>
+</table>
+
+<!-- CHARGES SUMMARY block -->
 <table class="grid" style="margin-top:0;border-top:none;">
   <tr>
-    <td style="width:60%;" class="small"><span class="bold">HSN/SAC :</span> <span class="bold">{{ inv.lr_hsn_code }}</span></td>
-    <td style="width:22%;" class="small">TOTAL TRIP AMOUNT</td>
-    <td style="width:18%;" class="bold small right">{{ '%.2f' % inv.pb_trip_amount if inv.pb_trip_amount else '0.00' }}</td>
+    <th style="background:#f5f5ff;color:#d00;text-align:left;">CHARGES SUMMARY</th>
+    <th style="width:25%;background:#f5f5ff;color:#d00;text-align:right;">AMOUNT (₹)</th>
   </tr>
   <tr>
-    <td class="small"><span class="bold">REMARKS:</span> {{ inv.pb_remarks }}</td>
-    <td class="small">INVOICE VALUE</td>
-    <td class="bold small right">{{ '%.2f' % inv.pb_trip_amount if inv.pb_trip_amount else '0.00' }}</td>
+    <td>Freight Amount <span class="tiny" style="color:#666;">(Rate &times; Weight)</span></td>
+    <td class="bold right">{{ inv.lr_freight_total | format_inr if inv.lr_freight_total else '0' }}</td>
   </tr>
   <tr>
-    <td rowspan="2" class="small"><span class="bold">AMOUNT IN WORDS :</span> <span class="bold">{{ inv.pb_balance_amount | inr_words }}.</span></td>
-    <td class="small">TOTAL ADVANCE RECEIVED</td>
-    <td class="bold small right">{{ '%.2f' % inv.lr_advance_amount if inv.lr_advance_amount else '0.00' }}</td>
+    <td>Halting Charges</td>
+    <td class="bold right">{{ inv.lr_halting_charge | format_inr if inv.lr_halting_charge else '0' }}</td>
   </tr>
   <tr>
-    <td class="small">NET PAYABLE AMOUNT</td>
-    <td class="bold small right">{{ inv.pb_balance_amount | format_inr if inv.pb_balance_amount else 0 }}</td>
+    <td>
+      Others Charges
+      {% set _parts = [] %}
+      {% if inv.lr_load_unload_charge %}{% set _ = _parts.append('Load/Unload=' ~ (inv.lr_load_unload_charge | format_inr)) %}{% endif %}
+      {% if inv.lr_bilty_charge %}{% set _ = _parts.append('Bilty=' ~ (inv.lr_bilty_charge | format_inr)) %}{% endif %}
+      {% if inv.lr_other_charge %}{% set _ = _parts.append('Other=' ~ (inv.lr_other_charge | format_inr)) %}{% endif %}
+      {% if _parts %}<span class="tiny" style="color:#666;">&nbsp;({{ _parts | join(', ') }})</span>{% endif %}
+    </td>
+    <td class="bold right">{{ inv.pb_others_charges | format_inr if inv.pb_others_charges else '0' }}</td>
+  </tr>
+  <tr>
+    <td>Deduction Amount</td>
+    <td class="bold right">{{ inv.pb_deduction_amount | format_inr if inv.pb_deduction_amount else '0' }}</td>
+  </tr>
+  <tr style="background:#f5f5ff;">
+    <td class="bold">TOTAL TRIP AMOUNT</td>
+    <td class="bold right">{{ '%.2f' % inv.pb_trip_amount if inv.pb_trip_amount else '0.00' }}</td>
+  </tr>
+  <tr>
+    <td>Invoice Value</td>
+    <td class="bold right">{{ '%.2f' % inv.pb_trip_amount if inv.pb_trip_amount else '0.00' }}</td>
+  </tr>
+  <tr>
+    <td>Total Advance Received</td>
+    <td class="bold right">{{ '%.2f' % inv.lr_advance_amount if inv.lr_advance_amount else '0.00' }}</td>
+  </tr>
+  <tr style="background:#eef7ee;">
+    <td class="bold" style="color:#0a6;">NET PAYABLE AMOUNT</td>
+    <td class="bold right" style="color:#0a6;font-size:11pt;">{{ inv.pb_balance_amount | format_inr if inv.pb_balance_amount else '0' }}</td>
+  </tr>
+</table>
+
+<!-- Remarks + Amount in words -->
+<table class="grid" style="margin-top:0;border-top:none;">
+  <tr>
+    <td style="width:15%;" class="small"><span class="bold">REMARKS</span></td>
+    <td class="small">{{ inv.pb_remarks or '—' }}</td>
+  </tr>
+  <tr>
+    <td class="small"><span class="bold">AMOUNT IN WORDS</span></td>
+    <td class="bold">{{ inv.pb_balance_amount | inr_words }}.</td>
   </tr>
 </table>
 
 <!-- Bottom: Terms | Bank details | Signature -->
-<table class="grid" style="margin-top:0;border-top:none;">
+<table class="grid" style="margin-top:8pt;">
   <tr>
-    <td style="width:33%;" class="small">
-      <div class="bold">1. ALL DISPUTE SUBJECT TO OUR LOCAL JURISDICTION</div>
-      <div class="bold" style="margin-top:2pt;">2. GSTIN PAYABLE BY CONSIGNOR / CONSIGNEE / TRANSPORTER</div>
-      <div class="bold" style="margin-top:2pt;">3. PENALTY / INTEREST WILL CHARGED IF BILL IS NOT PAID ON PRESENTATION.</div>
-    </td>
     <td style="width:34%;" class="small">
-      <div><span class="bold">ACCOUNT NAME :</span> <span class="bold">{{ inv.bank_ac_holder or company.bank.ac_holder or company.name }}</span></div>
-      <div style="margin-top:2pt;"><span class="bold">ACCOUNT NUMBER :</span> <span class="bold">{{ inv.bank_account_no or company.bank.account_no }}</span></div>
-      <div style="margin-top:2pt;"><span class="bold">IFSC CODE :</span> <span class="bold">{{ inv.bank_ifsc or company.bank.ifsc }}</span></div>
-      <div style="margin-top:2pt;"><span class="bold">BANK NAME :</span> <span class="bold">{{ inv.bank_name or company.bank.bank_name }}</span></div>
-      <div style="margin-top:2pt;"><span class="bold">PAN CARD NUMBER :</span> <span class="bold">{{ inv.bank_pan_number or company.bank.pan_number or company.pan }}</span></div>
+      <div class="cell-hdr" style="margin-bottom:3pt;">TERMS &amp; CONDITIONS</div>
+      <div class="tiny">1. ALL DISPUTE SUBJECT TO OUR LOCAL JURISDICTION.</div>
+      <div class="tiny" style="margin-top:2pt;">2. GSTIN PAYABLE BY CONSIGNOR / CONSIGNEE / TRANSPORTER.</div>
+      <div class="tiny" style="margin-top:2pt;">3. PENALTY / INTEREST WILL CHARGED IF BILL IS NOT PAID ON PRESENTATION.</div>
     </td>
-    <td style="width:33%;text-align:center;vertical-align:bottom;padding-top:10mm;">
-      <div class="bold small">FOR , {{ company.name | upper }}</div>
-      <div style="height:12mm;"></div>
+    <td style="width:36%;" class="small">
+      <div class="cell-hdr" style="margin-bottom:3pt;">BANK DETAILS</div>
+      <div><span class="bold">A/C NAME :</span> <span class="bold">{{ inv.bank_ac_holder or company.bank.ac_holder or company.name }}</span></div>
+      <div><span class="bold">A/C NUMBER :</span> <span class="bold">{{ inv.bank_account_no or company.bank.account_no }}</span></div>
+      <div><span class="bold">IFSC CODE :</span> <span class="bold">{{ inv.bank_ifsc or company.bank.ifsc }}</span></div>
+      <div><span class="bold">BANK NAME :</span> <span class="bold">{{ inv.bank_name or company.bank.bank_name }}</span></div>
+      <div><span class="bold">PAN NUMBER :</span> <span class="bold">{{ inv.bank_pan_number or company.bank.pan_number or company.pan }}</span></div>
+    </td>
+    <td style="width:30%;text-align:center;vertical-align:bottom;padding-top:12mm;">
+      <div class="bold">FOR , {{ company.name | upper }}</div>
+      <div style="height:14mm;"></div>
       <div class="bold small">(AUTHORIZED SIGNATORY)</div>
     </td>
   </tr>
 </table>
 
-<div class="tiny" style="margin-top:4pt;color:#555;">This electronic generated pdf does not require any physical signature. Date : {{ inv.updated_at or inv.created_at or '' }}</div>
+<div class="tiny" style="margin-top:6pt;color:#555;">This electronic generated pdf does not require any physical signature. Date : {{ inv.updated_at or inv.created_at or '' }}</div>
 
 </body></html>
