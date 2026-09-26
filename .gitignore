@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.pytest_cache/
+
+# Node / frontend deps
+frontend/node_modules/
+
+# IDE / editor state
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local databases (user data)
+trips.db
+*.db-journal
+
+# Reference materials kept in the working directory but not tracked
+LR.jpeg
+Party_bill.jpeg
+Driver_Bill.jpeg
+INVOICE_*.pdf
+
+# SDD workspace scratch (per-session task briefs, review packages, ledger)
+.superpowers/
