@@ -12,6 +12,12 @@
   table.grid td, table.grid th { border: 1px solid #111; padding: 1.5pt 3pt; vertical-align: top; }
   table.grid { border-collapse: collapse; width: 100%; }
   table.grid.compact td, table.grid.compact th { padding: 0.5pt 2pt; font-size: 7.5pt; line-height: 1.1; }
+  /* Nested-grid pattern: outer TD keeps its 1px .grid border; each inner
+     cell draws only right + bottom so nothing doubles at the perimeter. */
+  table.grid.inner { border-collapse: collapse; width: 100%; height: 100%; }
+  table.grid.inner td { border: 0; border-right: 1px solid #111; border-bottom: 1px solid #111; padding: 1.5pt 3pt; vertical-align: top; }
+  table.grid.inner tr:last-child td { border-bottom: 0; }
+  table.grid.inner td:last-child { border-right: 0; }
   .section-hdr { background: #f5f5ff; color: #d00; font-weight: bold; text-align: center; padding: 1pt; }
   .cell-hdr { color: #d00; font-weight: bold; font-size: 7.5pt; }
   .small { font-size: 7.5pt; }
@@ -75,11 +81,12 @@
       <div class="cell-hdr center">CAUTION</div>
       <div class="tiny">This consignment will not be Detained, re-route, diverted or re-book without consignees / consignor bank written permission. it will be delivered at the destination.</div>
     </td>
-    <td style="width:22%;">
-      <table style="width:100%;">
-        <tr><td class="small">BILTY NO :</td><td class="val red">{{ inv.lr_bilty_no or inv.serial_number }}</td></tr>
-      </table>
-      <table style="width:100%;margin-top:4pt;border-top:1px solid #111;padding-top:2pt;">
+    <td style="width:22%;padding:0;">
+      <table class="grid inner">
+        <tr>
+          <td class="small" style="width:40%;">BILTY NO :</td>
+          <td class="val red">{{ inv.lr_bilty_no or inv.serial_number }}</td>
+        </tr>
         <tr>
           <td class="small">VEHICLE NUMBER :</td>
           <td class="val">{{ inv.vehicle_number }}</td>
@@ -88,20 +95,26 @@
           <td class="small">DATE :</td>
           <td class="val">{{ inv.date }}</td>
         </tr>
-      </table>
-      <table style="width:100%;margin-top:4pt;">
         <tr>
-          <td class="small">Vehicle Size :</td><td class="small bold">{{ inv.lr_vehicle_size }}</td>
-          <td class="small">SEAL NUMBER :</td><td class="small bold">{{ inv.lr_seal_number }}</td>
+          <td class="small">Vehicle Size :</td>
+          <td class="small bold">{{ inv.lr_vehicle_size }}</td>
+        </tr>
+        <tr>
+          <td class="small">SEAL NUMBER :</td>
+          <td class="small bold">{{ inv.lr_seal_number }}</td>
+        </tr>
+        <tr>
+          <td colspan="2" class="small">DELIVERY ADDRESS : <span class="bold">{{ inv.lr_delivery_address }}</span></td>
         </tr>
       </table>
-      <div class="small" style="border-top:1px solid #111;margin-top:4pt;padding-top:2pt;">DELIVERY ADDRESS : <span class="bold">{{ inv.lr_delivery_address }}</span></div>
     </td>
-    <td style="width:14%;">
-      <div class="cell-hdr center">From</div>
-      <div class="val center">{{ inv.from_location | upper }}</div>
-      <div class="cell-hdr center" style="border-top:1px solid #111;margin-top:6pt;padding-top:2pt;">To</div>
-      <div class="val center">{{ inv.to_location | upper }}</div>
+    <td style="width:14%;padding:0;">
+      <table class="grid inner">
+        <tr><td class="cell-hdr center">From</td></tr>
+        <tr><td class="val center">{{ inv.from_location | upper }}</td></tr>
+        <tr><td class="cell-hdr center">To</td></tr>
+        <tr><td class="val center">{{ inv.to_location | upper }}</td></tr>
+      </table>
     </td>
   </tr>
 </table>
@@ -121,8 +134,8 @@
     <td class="val" style="width:26%;">{{ inv.consignee_name }}</td>
     <td class="val center" rowspan="3" style="vertical-align:middle;font-size:11pt;">{{ inv.lr_ref_invoice_no }}</td>
     <td rowspan="3" style="vertical-align:top;padding:0;">
-      <table style="width:100%;height:100%;">
-        <tr><td class="small">DRIVER NAME :</td><td class="small bold">{{ inv.db_driver_name }}</td></tr>
+      <table class="grid inner">
+        <tr><td class="small" style="width:45%;">DRIVER NAME :</td><td class="small bold">{{ inv.db_driver_name }}</td></tr>
         <tr><td class="small">DRIVER NUM :</td><td class="small bold">{{ inv.db_driver_num }}</td></tr>
         <tr><td class="small">DL NUMBER :</td><td class="small bold">{{ inv.db_driver_dl_number }}</td></tr>
         <tr><td class="small">OWNER NAME :</td><td class="small bold">{{ inv.db_owner_name }}</td></tr>
