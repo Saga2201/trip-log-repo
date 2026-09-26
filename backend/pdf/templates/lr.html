@@ -211,15 +211,15 @@
     <td class="center bold" rowspan="8" style="vertical-align:top;">{{ '%.2f' % inv.lr_weight_nett if inv.lr_weight_nett else '' }}<br/>MT</td>
     <td class="center bold" rowspan="8" style="vertical-align:top;">{{ '%.2f' % inv.lr_weight_charged if inv.lr_weight_charged else '' }}<br/>MT</td>
     <td class="small">FREIGHT AMOUNT</td>
-    <td class="right bold">{{ inv.lr_freight_total | format_inr if inv.lr_freight_total else '' }}</td>
+    <td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_freight_total | format_inr if inv.lr_freight_total else '' }}{% endif %}</td>
   </tr>
-  <tr><td class="center bold" style="vertical-align:middle;">{{ inv.lr_rate | format_inr if inv.lr_rate else '' }}</td><td class="small">HALTING CHARGE</td><td class="right bold">{{ inv.lr_halting_charge | format_inr if inv.lr_halting_charge else '' }}</td></tr>
-  <tr><td>&nbsp;</td><td class="small">Load/Unload Charge</td><td class="right bold">{{ inv.lr_load_unload_charge | format_inr if inv.lr_load_unload_charge else '' }}</td></tr>
-  <tr><td>&nbsp;</td><td class="small">Bilty Charge</td><td class="right bold">{{ inv.lr_bilty_charge | format_inr if inv.lr_bilty_charge else '' }}</td></tr>
-  <tr><td>&nbsp;</td><td class="small">OTHER CHARGE</td><td class="right bold">{{ inv.lr_other_charge | format_inr if inv.lr_other_charge else '' }}</td></tr>
-  <tr><td>&nbsp;</td><td class="small bold">TOTAL AMOUNT</td><td class="right bold">{{ inv.lr_total_amount | format_inr if inv.lr_total_amount else '' }}</td></tr>
-  <tr><td>&nbsp;</td><td class="small">ADVANCE AMOUNT</td><td class="right bold">{{ inv.lr_advance_amount | format_inr if inv.lr_advance_amount else '' }}</td></tr>
-  <tr><td>&nbsp;</td><td class="small bold">BALANCE AMOUNT</td><td class="right bold">{{ inv.lr_balance_amount | format_inr if inv.lr_balance_amount else '' }}</td></tr>
+  <tr><td class="center bold" style="vertical-align:middle;">{% if inv.lr_show_amounts %}{{ inv.lr_rate | format_inr if inv.lr_rate else '' }}{% endif %}</td><td class="small">HALTING CHARGE</td><td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_halting_charge | format_inr if inv.lr_halting_charge else '' }}{% endif %}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">Load/Unload Charge</td><td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_load_unload_charge | format_inr if inv.lr_load_unload_charge else '' }}{% endif %}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">Bilty Charge</td><td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_bilty_charge | format_inr if inv.lr_bilty_charge else '' }}{% endif %}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">OTHER CHARGE</td><td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_other_charge | format_inr if inv.lr_other_charge else '' }}{% endif %}</td></tr>
+  <tr><td>&nbsp;</td><td class="small bold">TOTAL AMOUNT</td><td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_total_amount | format_inr if inv.lr_total_amount else '' }}{% endif %}</td></tr>
+  <tr><td>&nbsp;</td><td class="small">ADVANCE AMOUNT</td><td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_advance_amount | format_inr if inv.lr_advance_amount else '' }}{% endif %}</td></tr>
+  <tr><td>&nbsp;</td><td class="small bold">BALANCE AMOUNT</td><td class="right bold">{% if inv.lr_show_amounts %}{{ inv.lr_balance_amount | format_inr if inv.lr_balance_amount else '' }}{% endif %}</td></tr>
 </table>
 
 <!-- Receiving | Signature area -->

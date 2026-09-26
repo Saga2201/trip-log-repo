@@ -115,6 +115,7 @@ def init_db():
                 lr_receiver_remark TEXT DEFAULT '',
                 lr_receiver_status TEXT DEFAULT '',
                 lr_remark TEXT DEFAULT '',
+                lr_show_amounts INTEGER DEFAULT 0,
                 bank_account_no TEXT DEFAULT '',
                 bank_ifsc TEXT DEFAULT '',
                 bank_ac_holder TEXT DEFAULT '',
@@ -181,6 +182,11 @@ def init_db():
         for col in _real_cols:
             if col not in existing_inv:
                 conn.execute(f"ALTER TABLE invoices ADD COLUMN {col} REAL DEFAULT 0")
+        # Boolean flags (SQLite: INTEGER 0/1)
+        _int_cols = [('lr_show_amounts', 0)]
+        for col, default in _int_cols:
+            if col not in existing_inv:
+                conn.execute(f"ALTER TABLE invoices ADD COLUMN {col} INTEGER DEFAULT {default}")
         conn.commit()
 
 
@@ -294,7 +300,7 @@ _INVOICE_COLS = [
     "lr_halting_charge", "lr_load_unload_charge", "lr_bilty_charge",
     "lr_other_charge", "lr_advance_amount",
     "lr_receiver_name", "lr_receiver_number", "lr_receiver_remark", "lr_receiver_status",
-    "lr_remark",
+    "lr_remark", "lr_show_amounts",
     "bank_account_no", "bank_ifsc", "bank_ac_holder", "bank_name",
     "bank_pan_holder", "bank_pan_number",
     "pb_bill_to_name", "pb_bill_to_address", "pb_bill_to_gstin",
@@ -307,7 +313,7 @@ _INVOICE_COLS = [
 ]
 
 _NUMERIC_COLS = {
-    "lr_packages",
+    "lr_packages", "lr_show_amounts",
     "lr_weight_nett", "lr_weight_charged", "lr_rate",
     "lr_service_tax", "lr_st_charge", "lr_less_advance",
     "lr_insurance_amount", "lr_ref_value",

@@ -392,6 +392,7 @@ class InvoiceIn(BaseModel):
     lr_receiver_remark: str = ""
     lr_receiver_status: str = ""
     lr_remark: str = ""
+    lr_show_amounts: int = 0  # 0 = hide charge amounts on LR PDF (default); 1 = show
     # Bank details (per-invoice override; falls back to COMPANY defaults in template)
     bank_account_no: str = ""
     bank_ifsc: str = ""

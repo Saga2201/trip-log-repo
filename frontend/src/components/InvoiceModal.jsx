@@ -33,6 +33,7 @@ const EMPTY = {
   // LR receiving + remark
   lr_receiver_name: '', lr_receiver_number: '', lr_receiver_remark: '', lr_receiver_status: '',
   lr_remark: '',
+  lr_show_amounts: 0,  // 0 = hide amounts on LR PDF (default), 1 = show
   // Bank details (auto-filled with company defaults; user can override per invoice)
   bank_account_no: '8866719574',
   bank_ifsc: 'KKBK0002609',
@@ -53,7 +54,7 @@ const EMPTY = {
 }
 
 const NUMERIC = new Set([
-  'lr_packages','lr_weight_nett','lr_weight_charged','lr_rate',
+  'lr_packages','lr_show_amounts','lr_weight_nett','lr_weight_charged','lr_rate',
   'lr_service_tax','lr_st_charge','lr_less_advance','lr_insurance_amount','lr_ref_value',
   'lr_halting_charge','lr_load_unload_charge','lr_bilty_charge','lr_other_charge','lr_advance_amount',
   'pb_freight','pb_hamali','pb_halting','pb_deduction_amount',
@@ -291,7 +292,18 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
               </div>
             </div>
             <div className="border-t border-green-200 pt-4 mb-4">
-              <div className="text-xs font-bold text-navy mb-2">CHARGES</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-xs font-bold text-navy">CHARGES</div>
+                <label className="flex items-center gap-2 text-xs text-gray-700 cursor-pointer bg-white border border-gray-300 rounded-lg px-2 py-1">
+                  <input
+                    type="checkbox"
+                    checked={!!parseInt(form.lr_show_amounts, 10)}
+                    onChange={e => setVal('lr_show_amounts', e.target.checked ? 1 : 0)}
+                  />
+                  <span>Show charge amounts on <b>LR PDF</b></span>
+                  <span className="text-[10px] text-gray-500">(off by default — amounts still appear on Party Bill)</span>
+                </label>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label="Halting Charge (₹)"><input type="number" min="0" value={form.lr_halting_charge} onChange={set('lr_halting_charge')} className={inputCls} /></Field>
                 <Field label="Load/Unload Charge (₹)"><input type="number" min="0" value={form.lr_load_unload_charge} onChange={set('lr_load_unload_charge')} className={inputCls} /></Field>
