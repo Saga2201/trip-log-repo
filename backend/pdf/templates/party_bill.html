@@ -173,10 +173,9 @@
       <div><span class="bold">BANK NAME :</span> <span class="bold">{{ inv.bank_name or company.bank.bank_name }}</span></div>
       <div><span class="bold">PAN NUMBER :</span> <span class="bold">{{ inv.bank_pan_number or company.bank.pan_number or company.pan }}</span></div>
     </td>
-    <td style="width:30%;text-align:center;vertical-align:bottom;padding-top:12mm;">
+    <td style="width:30%;text-align:center;vertical-align:bottom;">
       <div class="bold">FOR , {{ company.name | upper }}</div>
-      <div style="height:14mm;"></div>
-      <div class="bold small">(AUTHORIZED SIGNATORY)</div>
+      <div class="bold small" style="margin-top:2pt;">(AUTHORIZED SIGNATORY)</div>
     </td>
   </tr>
 </table>
