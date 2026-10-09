@@ -283,7 +283,7 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
                 <Field label="Packaging Type"><input value={form.lr_packaging_type} onChange={set('lr_packaging_type')} className={inputCls} /></Field>
                 <Field label="Number of Articles"><input type="number" min="0" value={form.lr_packages} onChange={set('lr_packages')} className={inputCls} /></Field>
                 <Field label="Material Name"><input value={form.lr_material_name} onChange={set('lr_material_name')} className={inputCls} /></Field>
-                <div className="sm:col-span-2"><Field label="Description (Said to Contain)"><input value={form.lr_description} onChange={set('lr_description')} className={inputCls} /></Field></div>
+                <div className="sm:col-span-2"><Field label="Description (Said to Contain)"><textarea rows={3} value={form.lr_description} onChange={set('lr_description')} placeholder="Press Enter to add a new line" className={inputCls + ' resize-y leading-snug'} /></Field></div>
                 <Field label="HSN Code"><input value={form.lr_hsn_code} onChange={set('lr_hsn_code')} className={inputCls} /></Field>
                 <Field label="Weight Actual (MT)"><input type="number" min="0" step="0.01" value={form.lr_weight_nett} onChange={set('lr_weight_nett')} className={inputCls} /></Field>
                 <Field label="Weight Guarantee (MT)"><input type="number" min="0" step="0.01" value={form.lr_weight_charged} onChange={set('lr_weight_charged')} className={inputCls} /></Field>
