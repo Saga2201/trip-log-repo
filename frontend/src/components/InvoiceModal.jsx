@@ -114,6 +114,7 @@ const EMPTY = {
   lr_receiver_name: '', lr_receiver_number: '', lr_receiver_remark: '', lr_receiver_status: '',
   lr_remark: '',
   lr_show_amounts: 0,  // 0 = hide amounts on LR PDF (default), 1 = show
+  lr_show_rate: 1,     // 1 = show RATE line in Party Bill + Lorry Owner Bill (default), 0 = hide
   // Bank details (auto-filled with company defaults; user can override per invoice)
   bank_account_no: '8866719574',
   bank_ifsc: 'KKBK0002609',
@@ -134,7 +135,7 @@ const EMPTY = {
 }
 
 const NUMERIC = new Set([
-  'lr_packages','lr_show_amounts','lr_weight_nett','lr_weight_charged','lr_rate',
+  'lr_packages','lr_show_amounts','lr_show_rate','lr_weight_nett','lr_weight_charged','lr_rate',
   'lr_service_tax','lr_st_charge','lr_less_advance','lr_insurance_amount','lr_ref_value',
   'lr_halting_charge','lr_load_unload_charge','lr_bilty_charge','lr_other_charge','lr_advance_amount',
   'pb_freight','pb_hamali','pb_halting','pb_deduction_amount',
@@ -367,7 +368,17 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
                 <Field label="HSN Code"><input value={form.lr_hsn_code} onChange={set('lr_hsn_code')} className={inputCls} /></Field>
                 <Field label="Weight Actual (MT)"><input type="number" min="0" step="0.01" value={form.lr_weight_nett} onChange={set('lr_weight_nett')} className={inputCls} /></Field>
                 <Field label="Weight Guarantee (MT)"><input type="number" min="0" step="0.01" value={form.lr_weight_charged} onChange={set('lr_weight_charged')} className={inputCls} /></Field>
-                <Field label="Rate (₹/MT)"><input type="number" min="0" step="0.01" value={form.lr_rate} onChange={set('lr_rate')} className={inputCls} /></Field>
+                <Field label="Rate (₹/MT)">
+                  <input type="number" min="0" step="0.01" value={form.lr_rate} onChange={set('lr_rate')} className={inputCls} />
+                  <label className="flex items-center gap-2 text-xs text-gray-700 mt-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!parseInt(form.lr_show_rate, 10)}
+                      onChange={e => setVal('lr_show_rate', e.target.checked ? 1 : 0)}
+                    />
+                    <span>Show RATE on <b>Party Bill</b> &amp; <b>Lorry Owner Bill</b></span>
+                  </label>
+                </Field>
                 <Field label="Freight Amount"><div className={roCls}>₹{lrFreight.toLocaleString('en-IN')}</div></Field>
               </div>
             </div>

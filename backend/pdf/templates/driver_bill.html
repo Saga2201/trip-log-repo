@@ -89,7 +89,7 @@
     <td class="small"><div class="kv-label">MATERIAL NAME</div><div class="bold" style="white-space:pre-line;">{{ inv.lr_material_name or inv.lr_description }}</div></td>
     <td class="small">
       <div class="kv-label">PARTICULAR</div>
-      {% if inv.lr_rate %}<div class="bold">RATE : {{ inv.lr_rate | format_inr }} / MT</div>{% endif %}
+      {% if inv.lr_rate and inv.lr_show_rate %}<div class="bold">RATE : {{ inv.lr_rate | format_inr }} / MT</div>{% endif %}
       {% if inv.lr_weight_charged %}<div class="bold">WEIGHT : {{ '%.2f' % inv.lr_weight_charged }} MT</div>{% endif %}
     </td>
   </tr>

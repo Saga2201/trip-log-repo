@@ -393,6 +393,7 @@ class InvoiceIn(BaseModel):
     lr_receiver_status: str = ""
     lr_remark: str = ""
     lr_show_amounts: int = 0  # 0 = hide charge amounts on LR PDF (default); 1 = show
+    lr_show_rate: int = 1     # 1 = show RATE line in Party Bill + Lorry Owner Bill PARTICULAR cell (default); 0 = hide
     # Bank details (per-invoice override; falls back to COMPANY defaults in template)
     bank_account_no: str = ""
     bank_ifsc: str = ""
