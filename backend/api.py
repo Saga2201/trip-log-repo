@@ -497,3 +497,42 @@ def invoice_pdf(inv_id: int, kind: str, copy: str = "consignor"):
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ---------------------------------------------------------------------------
+# Company signature (shared across all PDFs)
+# ---------------------------------------------------------------------------
+
+from backend.pdf.company import SIGNATURE_PATH, signature_exists  # noqa: E402
+
+_SIG_MAX_BYTES = 2 * 1024 * 1024  # 2 MB upload limit
+_SIG_ALLOWED_SUFFIXES = {".png", ".jpg", ".jpeg"}
+
+
+@app.get("/company/signature")
+def get_signature():
+    """Return the current signature image if one is uploaded; 404 otherwise."""
+    if not signature_exists():
+        raise HTTPException(404, "No signature uploaded")
+    return FileResponse(str(SIGNATURE_PATH), media_type="image/png")
+
+
+@app.post("/company/signature")
+async def upload_signature(file: UploadFile = File(...)):
+    """Replace the company signature image used in all PDF signature blocks."""
+    suffix = Path(file.filename or "").suffix.lower()
+    if suffix not in _SIG_ALLOWED_SUFFIXES:
+        raise HTTPException(400, "Only PNG or JPG images are allowed")
+    contents = await file.read()
+    if len(contents) > _SIG_MAX_BYTES:
+        raise HTTPException(400, f"File too large (max {_SIG_MAX_BYTES // (1024*1024)} MB)")
+    SIGNATURE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    SIGNATURE_PATH.write_bytes(contents)
+    return {"ok": True, "url": "/company/signature"}
+
+
+@app.delete("/company/signature", status_code=204)
+def delete_signature():
+    """Remove the current signature image. Templates fall back to text-only."""
+    if SIGNATURE_PATH.exists():
+        SIGNATURE_PATH.unlink()

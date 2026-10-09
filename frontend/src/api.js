@@ -32,3 +32,13 @@ export const deleteInvoice        = (id)           => api.delete(`/invoices/${id
 export const nextSerial           = (date)         => api.get('/invoices/next-serial', { params: { date } }).then(r => r.data.serial)
 export const invoicePdfUrl        = (id, kind)     => `/api/invoices/${id}/pdf/${kind}`
 export const invoiceAllPdfsUrl    = (id)           => `/api/invoices/${id}/pdf/all`
+
+// ── Company signature (shared across all PDFs) ───────────────────
+// Append a cache-buster so the preview <img> re-fetches after upload/replace.
+export const companySignatureUrl    = (bust)  => `/api/company/signature${bust ? `?t=${bust}` : ''}`
+export const uploadCompanySignature = (file) => {
+  const fd = new FormData()
+  fd.append('file', file)
+  return api.post('/company/signature', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then(r => r.data)
+}
+export const deleteCompanySignature = () => api.delete('/company/signature').then(r => r.data)

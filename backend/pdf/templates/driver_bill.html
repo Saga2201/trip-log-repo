@@ -157,6 +157,9 @@
       <div><span class="bold">PAN NUMBER :</span> <span class="bold">{{ inv.bank_pan_number or company.bank.pan_number or company.pan }}</span></div>
     </td>
     <td style="width:30%;text-align:center;vertical-align:bottom;">
+      {% if company.signature_url %}
+        <img src="{{ company.signature_url }}" style="height:16mm;width:auto;max-width:55mm;display:block;margin:0 auto 2pt;" alt="signature" />
+      {% endif %}
       <div class="bold">FOR , {{ company.name | upper }}</div>
       <div class="bold small" style="margin-top:2pt;">(AUTHORIZED SIGNATORY)</div>
     </td>

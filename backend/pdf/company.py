@@ -2,6 +2,19 @@
 from pathlib import Path
 
 _LOGO_ABS = Path(__file__).parent / "assets" / "jb_logo.png"
+SIGNATURE_PATH = Path(__file__).parent / "assets" / "jb_signature.png"
+
+
+def signature_exists() -> bool:
+    """True if a company signature image has been uploaded."""
+    return SIGNATURE_PATH.exists() and SIGNATURE_PATH.stat().st_size > 0
+
+
+def signature_url_or_none():
+    """Return the file:// URL WeasyPrint can read, or None if no signature set.
+    Templates use this to decide whether to render the <img> or fall back to
+    the text-only signature block."""
+    return SIGNATURE_PATH.as_uri() if signature_exists() else None
 
 COMPANY = {
     "name": "JB Transports",

@@ -1,6 +1,86 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { X, FileText, MapPin, Truck, CreditCard, Wrench, User, Landmark } from 'lucide-react'
-import { getInvoice, createInvoice, updateInvoice, nextSerial, invoicePdfUrl, invoiceAllPdfsUrl } from '../api'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { X, FileText, MapPin, Truck, CreditCard, Wrench, User, Landmark, PenLine } from 'lucide-react'
+import { getInvoice, createInvoice, updateInvoice, nextSerial, invoicePdfUrl, invoiceAllPdfsUrl, companySignatureUrl, uploadCompanySignature, deleteCompanySignature } from '../api'
+
+function SignatureBlock() {
+  const [cacheBust, setCacheBust] = useState(() => Date.now())
+  const [hasSignature, setHasSignature] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState('')
+  const fileRef = useRef(null)
+
+  // Probe once on mount to see if a signature exists
+  useEffect(() => {
+    fetch(companySignatureUrl(cacheBust), { method: 'HEAD' })
+      .then(r => setHasSignature(r.ok))
+      .catch(() => setHasSignature(false))
+  }, [cacheBust])
+
+  const onPick = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setError('')
+    if (!/^image\/(png|jpe?g)$/.test(file.type)) {
+      setError('Please choose a PNG or JPG image.')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setError('File too large — max 2 MB.')
+      return
+    }
+    setUploading(true)
+    try {
+      await uploadCompanySignature(file)
+      setCacheBust(Date.now())  // refresh preview
+      setHasSignature(true)
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Upload failed.')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''  // allow re-upload of same filename
+    }
+  }
+
+  const onRemove = async () => {
+    if (!window.confirm('Remove the company signature from all future PDFs?')) return
+    try {
+      await deleteCompanySignature()
+      setHasSignature(false)
+      setCacheBust(Date.now())
+    } catch { /* ignore */ }
+  }
+
+  return (
+    <div>
+      <div className="flex items-start gap-4 flex-wrap">
+        <div className="w-48 h-20 bg-white border border-gray-300 rounded-lg flex items-center justify-center overflow-hidden">
+          {hasSignature ? (
+            <img src={companySignatureUrl(cacheBust)} alt="signature" className="max-h-full max-w-full object-contain" />
+          ) : (
+            <span className="text-[10px] text-gray-400 text-center px-2">No signature uploaded yet</span>
+          )}
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <div className="text-xs text-gray-700 mb-2">
+            💡 <b>Recommended size:</b> 600 × 200 px, transparent PNG, under 2&nbsp;MB. The signature appears in the lower-right of all three PDFs at ~55&nbsp;mm wide × 16&nbsp;mm tall.
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <label className="px-3 py-1.5 rounded-lg bg-navy text-white text-xs font-semibold cursor-pointer hover:bg-navy-light">
+              {uploading ? 'Uploading…' : (hasSignature ? 'Replace Signature' : 'Upload Signature')}
+              <input ref={fileRef} type="file" accept="image/png,image/jpeg" onChange={onPick} className="hidden" disabled={uploading} />
+            </label>
+            {hasSignature && (
+              <button type="button" onClick={onRemove} className="px-3 py-1.5 rounded-lg bg-white border border-red-300 text-red-600 text-xs font-semibold hover:bg-red-50">
+                Remove
+              </button>
+            )}
+          </div>
+          {error && <div className="text-xs text-red-600 mt-2">{error}</div>}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const EMPTY = {
   date: new Date().toISOString().slice(0, 10),
@@ -433,6 +513,14 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
               <Field label="Bank Name"><input value={form.bank_name} onChange={set('bank_name')} className={inputCls + ' uppercase'} /></Field>
               <Field label="PAN Card Name"><input value={form.bank_pan_holder} onChange={set('bank_pan_holder')} className={inputCls + ' uppercase'} /></Field>
               <Field label="PAN Card Number"><input value={form.bank_pan_number} onChange={set('bank_pan_number')} className={inputCls + ' uppercase'} /></Field>
+            </div>
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <PenLine size={16} className="text-navy" />
+                <span className="text-xs font-bold text-navy uppercase tracking-wider">Authorized Signature</span>
+              </div>
+              <p className="text-xs text-blue-700 mb-3">🖊️ Upload once — this signature image appears on every LR, Party Bill, and Lorry Owner Bill PDF going forward. Replace or remove any time.</p>
+              <SignatureBlock />
             </div>
           </Section>
 

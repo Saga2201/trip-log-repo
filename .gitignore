@@ -18,6 +18,11 @@ frontend/node_modules/
 trips.db
 *.db-journal
 
+# User-uploaded company signature (per installation)
+backend/pdf/assets/jb_signature.png
+backend/pdf/assets/jb_signature.jpg
+backend/pdf/assets/jb_signature.jpeg
+
 # Reference materials kept in the working directory but not tracked
 LR.jpeg
 Party_bill.jpeg

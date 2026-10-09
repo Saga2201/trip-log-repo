@@ -77,7 +77,7 @@ _preload_weasyprint_libs_macos()
 from jinja2 import Environment, FileSystemLoader, select_autoescape  # noqa: E402
 from weasyprint import HTML, CSS  # noqa: E402
 
-from backend.pdf.company import COMPANY  # noqa: E402
+from backend.pdf.company import COMPANY, signature_url_or_none  # noqa: E402
 from backend.pdf.filters import inr_words, format_inr  # noqa: E402
 
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -101,7 +101,11 @@ def render_pdf(kind: str, invoice: dict, copy_type: str = "consignor") -> bytes:
     if not template_name:
         raise ValueError(f"unknown kind: {kind!r}")
     template = _env.get_template(template_name)
-    html = template.render(inv=invoice, company=COMPANY, copy_type=copy_type)
+    # Build a company dict for this render that includes a signature_url if a
+    # signature image has been uploaded. Keeping COMPANY untouched avoids
+    # module-level mutation across renders.
+    company_ctx = {**COMPANY, "signature_url": signature_url_or_none()}
+    html = template.render(inv=invoice, company=company_ctx, copy_type=copy_type)
     base_css = CSS(filename=str(_TEMPLATES_DIR / "_base.css"))
     return HTML(string=html, base_url=str(_TEMPLATES_DIR)).write_pdf(stylesheets=[base_css])
 
