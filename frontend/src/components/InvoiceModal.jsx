@@ -84,6 +84,7 @@ function SignatureBlock() {
 
 const EMPTY = {
   date: new Date().toISOString().slice(0, 10),
+  display_serial: '',  // user-editable serial shown on PDFs; auto-populated from system serial on new invoices
   vehicle_number: '',
   mobile1: '', mobile2: '',
   from_location: '', to_location: '',
@@ -202,7 +203,12 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
       })
     } else {
       setForm(EMPTY)
-      nextSerial(EMPTY.date).then(setSerialPreview).catch(() => setSerialPreview(''))
+      nextSerial(EMPTY.date).then(s => {
+        setSerialPreview(s)
+        // Pre-populate the editable display_serial with the system serial so
+        // the PDFs show something sensible out of the box. User can edit.
+        setForm(f => (f.display_serial ? f : { ...f, display_serial: s || '' }))
+      }).catch(() => setSerialPreview(''))
     }
   }, [open, invoiceId])
 
@@ -211,7 +217,14 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
   // effect kicks in on any date change so the UI stays consistent.
   useEffect(() => {
     if (!open || invoiceId) return
-    nextSerial(form.date).then(setSerialPreview).catch(() => {})
+    nextSerial(form.date).then(s => {
+      setSerialPreview(s)
+      // Keep display_serial in sync with the preview UNLESS the user has
+      // edited it (dirty tracker records direct edits).
+      if (!dirty.has('display_serial')) {
+        setForm(f => ({ ...f, display_serial: s || '' }))
+      }
+    }).catch(() => {})
   }, [form.date, open, invoiceId])
 
   // Mirroring: only for CREATE flow, and only for fields the user hasn't touched.
@@ -294,7 +307,19 @@ export default function InvoiceModal({ open, invoiceId, onClose, onSaved }) {
 
           <Section icon={FileText} title="Common Header" color="blue">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Field label="Serial #"><div className={roCls + ' font-mono text-navy'}>{serialPreview || '—'}</div></Field>
+              <Field label="System ID (internal reference)">
+                <div className={roCls + ' font-mono text-navy text-xs'}>{serialPreview || '—'}</div>
+              </Field>
+              <Field label="Serial # (shown on PDFs)">
+                <input
+                  type="text"
+                  value={form.display_serial}
+                  onChange={set('display_serial')}
+                  placeholder={serialPreview || 'e.g. AHMD/25-26/500315'}
+                  className={inputCls + ' font-mono'}
+                />
+                <p className="text-[10px] text-gray-500 mt-1">Pre-filled with the system number. Edit to anything you want — appears in all three PDFs.</p>
+              </Field>
               <Field label="Date" required><input type="date" value={form.date} onChange={set('date')} className={inputCls} /></Field>
               <Field label="Vehicle Number" required>
                 <input type="text" value={form.vehicle_number} onChange={set('vehicle_number')} placeholder="e.g. GJ01AB1234" className={inputCls + ' uppercase font-mono tracking-widest'} />

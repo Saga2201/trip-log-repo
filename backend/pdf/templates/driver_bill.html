@@ -50,7 +50,7 @@
 <!-- Bill no / date -->
 <table style="width:100%;margin-top:4pt;margin-bottom:4pt;">
   <tr>
-    <td class="bold"> LORRY OWNER BILL NO. : {{ inv.serial_number }}</td>
+    <td class="bold"> LORRY OWNER BILL NO. : {{ inv.display_serial or inv.serial_number }}</td>
     <td class="bold right">Date : {{ inv.date }}</td>
   </tr>
 </table>
@@ -79,7 +79,7 @@
     <th colspan="4" style="background:#f5f5ff;color:#d00;text-align:left;">TRIP DETAILS</th>
   </tr>
   <tr>
-    <td style="width:25%;" class="small"><div class="kv-label">DATE / LR / BILTY NUMBER</div><div class="bold">{{ inv.date }} / {{ inv.lr_bilty_no or inv.serial_number }}</div></td>
+    <td style="width:25%;" class="small"><div class="kv-label">DATE / LR / BILTY NUMBER</div><div class="bold">{{ inv.date }} / {{ inv.lr_bilty_no or inv.display_serial or inv.serial_number }}</div></td>
     <td style="width:25%;" class="small"><div class="kv-label">VEHICLE NO.</div><div class="bold">{{ inv.vehicle_number }}</div></td>
     <td style="width:25%;" class="small"><div class="kv-label">PARTY BILL / INVOICE NO.</div><div class="bold">{{ inv.lr_ref_invoice_no }}</div></td>
     <td style="width:25%;" class="small"><div class="kv-label">HSN / SAC</div><div class="bold">{{ inv.lr_hsn_code }}</div></td>

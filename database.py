@@ -57,6 +57,7 @@ def init_db():
             CREATE TABLE IF NOT EXISTS invoices (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 serial_number TEXT NOT NULL UNIQUE,
+                display_serial TEXT DEFAULT '',
                 date TEXT NOT NULL,
                 vehicle_number TEXT NOT NULL,
                 mobile1 TEXT DEFAULT '',
@@ -171,6 +172,7 @@ def init_db():
             'bank_account_no', 'bank_ifsc', 'bank_ac_holder', 'bank_name',
             'bank_pan_holder', 'bank_pan_number',
             'pb_bill_to_gstin', 'pb_remarks',
+            'display_serial',
         ]
         for col in _text_cols:
             if col not in existing_inv:
@@ -280,6 +282,7 @@ def delete_trip(trip_id):
 # ---------------------------------------------------------------------------
 
 _INVOICE_COLS = [
+    "display_serial",
     "date", "vehicle_number",
     "mobile1", "mobile2",
     "from_location", "to_location",

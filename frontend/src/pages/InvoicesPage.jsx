@@ -54,6 +54,7 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
     const q = search.toLowerCase().trim()
     if (!q) return invoices
     return invoices.filter(i =>
+      i.display_serial?.toLowerCase().includes(q) ||
       i.serial_number?.toLowerCase().includes(q) ||
       i.vehicle_number?.toLowerCase().includes(q) ||
       i.consignor_name?.toLowerCase().includes(q) ||
@@ -66,7 +67,7 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
   const monthKey = new Date().toISOString().slice(0, 7)
   const thisMonth = invoices.filter(i => (i.date || '').startsWith(monthKey)).length
   const totalBilled = invoices.reduce((s, i) => s + (i.pb_amount_total || 0), 0)
-  const latestSerial = invoices[0]?.serial_number || '—'
+  const latestSerial = (invoices[0]?.display_serial || invoices[0]?.serial_number) || '—'
 
   const handleConfirm = async () => {
     if (!confirm) return
@@ -138,7 +139,12 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
               <tbody>
                 {filtered.map((i, idx) => (
                   <tr key={i.id} className={`border-b border-gray-100 hover:bg-blue-50 ${idx % 2 === 1 ? 'bg-gray-50/30' : ''}`}>
-                    <td className="px-4 py-3 font-bold text-navy whitespace-nowrap">{i.serial_number}</td>
+                    <td className="px-4 py-3 font-bold text-navy whitespace-nowrap">
+                      {i.display_serial || i.serial_number}
+                      {i.display_serial && i.display_serial !== i.serial_number && (
+                        <div className="text-[10px] font-normal text-gray-400 font-mono">#{i.serial_number}</div>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{i.date}</td>
                     <td className="px-4 py-3 font-mono font-bold text-navy whitespace-nowrap">{i.vehicle_number}</td>
                     <td className="px-4 py-3 text-gray-700">{[i.consignor_name, i.consignee_name].filter(Boolean).join(' → ') || '—'}</td>
@@ -157,7 +163,7 @@ export default function InvoicesPage({ onNewInvoice, onEditInvoice, refreshKey }
                         >
                           <Download size={15} />
                         </button>
-                        <button title="Delete" onClick={() => setConfirm({ id: i.id, serial: i.serial_number })} className="p-1.5 rounded hover:bg-red-100 text-red-500">
+                        <button title="Delete" onClick={() => setConfirm({ id: i.id, serial: i.display_serial || i.serial_number })} className="p-1.5 rounded hover:bg-red-100 text-red-500">
                           <Trash2 size={15} />
                         </button>
                       </div>

@@ -330,6 +330,7 @@ from backend.pdf.generator import render_pdf, render_all_zip
 class InvoiceIn(BaseModel):
     date: str
     vehicle_number: str
+    display_serial: str = ""  # user-editable serial shown on PDFs; blank = fall back to system serial_number
     mobile1: str = ""
     mobile2: str = ""
     from_location: str = ""
